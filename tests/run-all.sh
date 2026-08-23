@@ -14,10 +14,23 @@ trap cleanup EXIT
 "${compose[@]}" up -d --build --wait >/dev/null
 "${compose[@]}" exec -T php php scripts/migrate.php >/dev/null
 "${compose[@]}" exec -T php php scripts/migrate.php >/dev/null
-"${compose[@]}" exec -T php php scripts/seed-admin.php >/dev/null
-"${compose[@]}" exec -d php php -S 127.0.0.1:19090 tests/mock-linkedin-router.php
 pass=0; fail=0
 check(){ if "$@"; then printf 'PASS %s\n' "$*"; pass=$((pass+1)); else printf 'FAIL %s\n' "$*"; fail=$((fail+1)); fi; }
+for missing_variable in INITIAL_ADMIN_USERNAME INITIAL_ADMIN_EMAIL INITIAL_ADMIN_PASSWORD; do
+  if "${compose[@]}" exec -T -e APP_ENV=production -e "$missing_variable=" php php scripts/create-initial-admin.php >/tmp/social-post-initial-admin-output 2>&1; then check false; else check true; fi
+done
+if "${compose[@]}" exec -T -e APP_ENV=production -e INITIAL_ADMIN_EMAIL=invalid php php scripts/create-initial-admin.php >/tmp/social-post-initial-admin-output 2>&1; then check false; else check true; fi
+if "${compose[@]}" exec -T -e APP_ENV=production -e INITIAL_ADMIN_PASSWORD=short php php scripts/create-initial-admin.php >/tmp/social-post-initial-admin-output 2>&1; then check false; else check true; fi
+check test "$("${compose[@]}" exec -T db sh -lc 'mariadb -u"$MARIADB_USER" -p"$MARIADB_PASSWORD" "$MARIADB_DATABASE" -Nse "SELECT COUNT(*) FROM users"')" = 0
+initial_admin_output=$("${compose[@]}" exec -T -e APP_ENV=production php php scripts/create-initial-admin.php 2>&1)
+check test "$initial_admin_output" = "Initialer Admin wurde angelegt."
+if [[ $initial_admin_output != *"$INITIAL_ADMIN_PASSWORD"* && $initial_admin_output != *'$2y$'* && $initial_admin_output != *'$argon2'* ]]; then check true; else check false; fi
+initial_admin_row=$("${compose[@]}" exec -T db sh -lc 'mariadb -u"$MARIADB_USER" -p"$MARIADB_PASSWORD" "$MARIADB_DATABASE" -Nse "SELECT CONCAT(COUNT(*),\":\",MAX(role),\":\",MAX(is_active),\":\",MIN(CHAR_LENGTH(password_hash)>0)) FROM users"')
+check test "$initial_admin_row" = 1:admin:1:1
+second_admin_output=$("${compose[@]}" exec -T -e APP_ENV=production php php scripts/create-initial-admin.php 2>&1)
+check test "$second_admin_output" = "Initialer Admin wurde nicht angelegt: users-Tabelle ist nicht leer."
+check test "$("${compose[@]}" exec -T db sh -lc 'mariadb -u"$MARIADB_USER" -p"$MARIADB_PASSWORD" "$MARIADB_DATABASE" -Nse "SELECT COUNT(*) FROM users"')" = 1
+"${compose[@]}" exec -d php php -S 127.0.0.1:19090 tests/mock-linkedin-router.php
 status(){ curl -sS -o /tmp/social-post-test-body -w '%{http_code}' "$@"; }
 for path in /.env /.env.example /database/schema.sql /docker-compose.yml; do code=$(status "$base_url$path"); check sh -c '[ "$1" = 403 ] || [ "$1" = 404 ]' sh "$code"; done
 code=$(status $base_url/api/ping); check test "$code" = 200
@@ -29,7 +42,7 @@ code=$(status -X POST -H 'Content-Type: application/json' --data '{' $base_url/a
 cookie=$(mktemp /tmp/social-post-test-cookie.XXXXXX); csrf_json=$(curl -sS -c "$cookie" $base_url/api/auth/csrf); csrf=$(printf '%s' "$csrf_json"|sed -n 's/.*"csrfToken":"\([a-f0-9]*\)".*/\1/p'); before=$(awk '$6=="SOCIALPOSTSESSID"{print $7}' "$cookie")
 code=$(status -b "$cookie" -H 'Content-Type: application/json' -H "X-CSRF-Token: $csrf" --data '{' $base_url/api/auth/login); check test "$code" = 400
 bad=$(printf '{"login":"%s","password":"wrong-password"}' "$INITIAL_ADMIN_USERNAME"); code=$(status -b "$cookie" -H 'Content-Type: application/json' -H "X-CSRF-Token: $csrf" --data "$bad" $base_url/api/auth/login); check test "$code" = 401
-login=$(printf '{"login":"%s","password":"%s"}' "$INITIAL_ADMIN_USERNAME" "$INITIAL_ADMIN_PASSWORD"); response=$(curl -sS -b "$cookie" -c "$cookie" -H 'Content-Type: application/json' -H "X-CSRF-Token: $csrf" --data "$login" $base_url/api/auth/login); csrf=$(printf '%s' "$response"|sed -n 's/.*"csrfToken":"\([a-f0-9]*\)".*/\1/p'); after=$(awk '$6=="SOCIALPOSTSESSID"{print $7}' "$cookie"); check test -n "$csrf"; check test "$before" != "$after"
+login=$(printf '{"login":"%s","password":"%s"}' "$INITIAL_ADMIN_EMAIL" "$INITIAL_ADMIN_PASSWORD"); response=$(curl -sS -b "$cookie" -c "$cookie" -H 'Content-Type: application/json' -H "X-CSRF-Token: $csrf" --data "$login" $base_url/api/auth/login); csrf=$(printf '%s' "$response"|sed -n 's/.*"csrfToken":"\([a-f0-9]*\)".*/\1/p'); after=$(awk '$6=="SOCIALPOSTSESSID"{print $7}' "$cookie"); check test -n "$csrf"; check test "$before" != "$after"
 code=$(status $base_url/api/admin/providers); check test "$code" = 401
 code=$(status -X PUT -H 'Content-Type: application/json' --data '{}' $base_url/api/admin/providers/linkedin); check test "$code" = 401
 code=$(status $base_url/api/admin/email-settings);check test "$code" = 401
