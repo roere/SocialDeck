@@ -1,0 +1,3 @@
+const keys={draft:"social-post:draft",history:"social-post:publishing-history"};
+function read(key,fallback){try{return JSON.parse(localStorage.getItem(key))??fallback;}catch{return fallback;}}
+export const storage={saveDraft(post){localStorage.setItem(keys.draft,JSON.stringify(post));},loadDraft(){return read(keys.draft,null);},deleteDraft(){localStorage.removeItem(keys.draft);},savePublishingJob(job){const history=read(keys.history,[]);localStorage.setItem(keys.history,JSON.stringify([job,...history]));},getPublishingHistory(){return read(keys.history,[]);},clearPublishingHistory(){localStorage.removeItem(keys.history);}};

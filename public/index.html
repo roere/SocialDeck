@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Social Post</title>
+    <link rel="stylesheet" href="css/app.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#/">Social Post</a>
+      <nav class="main-nav" aria-label="Hauptnavigation">
+        <a href="#/" data-route-link="home">Start</a>
+        <a href="#/admin" data-route-link="admin" hidden>Admin</a>
+      </nav>
+      <div class="session-nav">
+        <span id="current-user" class="current-user" hidden></span>
+        <a id="login-link" class="login-link" href="#/login">Login</a>
+        <button id="logout-button" class="button button-quiet" type="button" hidden>Logout</button>
+      </div>
+    </header>
+    <main class="app-shell">
+      <div id="message" class="message" role="status" aria-live="polite"></div>
+
+      <section id="home-view" data-view="home">
+        <header class="page-header">
+          <p class="eyebrow">Lokaler Prototyp</p>
+          <h1>Social Post</h1>
+          <p>Beiträge zentral erstellen und auf Social-Media-Plattformen veröffentlichen.</p>
+        </header>
+        <section class="post-editor" aria-label="Beitragseditor">
+        <article class="panel editor-panel base-editor">
+          <div class="panel-heading">
+            <div>
+              <p class="section-kicker">Editor</p>
+              <h2>Basisbeitrag</h2>
+            </div>
+            <span id="post-status" class="status-badge">Entwurf</span>
+          </div>
+          <label for="post-text">Basistext</label>
+          <textarea id="post-text" rows="10" placeholder="Was möchtest du veröffentlichen?"></textarea>
+          <div class="field-meta">
+            <span id="character-count">0 Zeichen</span>
+            <span id="provider-limit">Keine Plattform ausgewählt</span>
+          </div>
+
+          <label for="post-link">Link <span class="muted">(optional)</span></label>
+          <input id="post-link" type="url" placeholder="https://...">
+
+          <section class="post-text-blocks" aria-labelledby="post-text-block-heading">
+            <h3 id="post-text-block-heading">Textbaustein einfügen</h3>
+            <input id="post-text-block-search" type="search" placeholder="Titel, Kategorie oder Schlüssel suchen">
+            <div id="post-text-block-list" class="post-text-block-list"></div>
+          </section>
+
+          <section class="post-preview" aria-labelledby="post-preview-heading">
+            <h3 id="post-preview-heading">Vorschau</h3>
+            <pre id="post-preview">Noch kein Basistext vorhanden.</pre>
+            <p id="post-preview-error" class="form-error" role="alert"></p>
+          </section>
+
+          <div class="media-box">
+            <div class="media-icon" aria-hidden="true">+</div>
+            <div>
+              <strong>Medien</strong>
+              <p>Bilder, Videos und Dokumente werden in einem späteren Schritt ergänzt.</p>
+            </div>
+          </div>
+
+          <div class="button-row editor-actions">
+            <button id="copy-button" class="button button-secondary" type="button">Basistext kopieren</button>
+          </div>
+        </article>
+
+        </article>
+
+        <section class="panel provider-panel">
+            <div class="panel-heading compact">
+              <div>
+                <p class="section-kicker">Zielgruppen</p>
+                <h2>Plattformen</h2>
+              </div>
+              <span id="provider-count" class="count-badge">0</span>
+            </div>
+            <div id="provider-list" class="provider-list"></div>
+          </section>
+
+        <section id="platform-variants" class="platform-variants" aria-label="Plattformfassungen"></section>
+
+        <div class="panel editor-footer">
+          <div class="button-row">
+            <button id="save-button" class="button button-secondary" type="button">Entwurf speichern</button>
+            <button id="delete-button" class="button button-quiet" type="button">Entwurf löschen</button>
+          </div>
+          <span id="draft-status" class="muted"></span>
+        </div>
+        </section>
+      </section>
+
+      <section id="login-view" class="standalone-view" data-view="login" hidden>
+        <div class="auth-card panel">
+          <p class="section-kicker">Lokale Entwicklung</p>
+          <h1>Admin-Login</h1>
+          <p class="muted">Serverseitiger Admin-Zugang für die lokale Entwicklungsumgebung.</p>
+          <form id="login-form">
+            <label for="login-identity">E-Mail oder Benutzername</label>
+            <input id="login-identity" name="identity" autocomplete="username" required>
+            <label for="login-password">Passwort</label>
+            <input id="login-password" name="password" type="password" autocomplete="current-password" required>
+            <p id="login-error" class="form-error" role="alert"></p>
+            <button class="button button-primary" type="submit">Login</button>
+          </form>
+        </div>
+      </section>
+
+      <section id="admin-view" class="standalone-view" data-view="admin" hidden>
+        <div class="admin-heading">
+          <div><p class="section-kicker">Administration</p><h1>Admin</h1><p class="muted">Konten, Provider und allgemeine Einstellungen.</p></div>
+          <span class="status-badge">Geschützt</span>
+        </div>
+        <nav class="admin-tabs" aria-label="Admin-Bereiche"><button class="admin-tab active" type="button">Verbundene Konten</button><button class="admin-tab" type="button">Rechtliches</button><button class="admin-tab" type="button">Textbausteine</button><button class="admin-tab" type="button">E-Mail-Konfiguration</button><button class="admin-tab" type="button">Admin-Konto</button></nav>
+        <div id="accounts-panel" class="admin-tab-panel">
+          <p class="section-kicker">Provider-Konfiguration</p><h2>Verbundene Konten</h2><p class="muted">LinkedIn kann per OAuth verbunden werden. Instagram und Facebook folgen später.</p>
+          <div id="provider-config-list" class="provider-config-list"></div>
+        </div>
+        <form id="legal-settings-form" class="panel settings-panel admin-tab-panel" hidden>
+          <div class="panel-heading compact"><div><p class="section-kicker">Allgemein</p><h2>Rechtstexte</h2></div></div>
+          <label for="imprint-input">Impressum</label><textarea id="imprint-input" rows="8" placeholder="Noch kein Impressum hinterlegt."></textarea>
+          <label for="privacy-input">Datenschutz</label><textarea id="privacy-input" rows="8" placeholder="Noch keine Datenschutzerklärung hinterlegt."></textarea>
+          <div class="button-row"><button class="button button-primary" type="submit">Speichern</button></div>
+        </form>
+        <section id="text-blocks-panel" class="admin-tab-panel" hidden>
+          <div class="text-block-layout">
+            <aside class="panel text-block-selection">
+              <label class="text-block-search">Textbaustein suchen<input id="text-block-search" type="search" placeholder="Titel, Schlüssel, Kategorie oder Inhalt"></label>
+              <div class="text-block-list-heading"><span>Textbausteine</span><span>Status</span></div>
+              <div id="text-block-list" class="text-block-list" role="listbox" aria-label="Textbaustein auswählen"></div>
+              <button id="text-block-new" class="button button-secondary" type="button">Neuer Textbaustein</button>
+            </aside>
+            <form id="text-block-editor-form" class="panel text-block-editor" aria-labelledby="text-block-editor-heading">
+              <p id="text-block-editor-category" class="section-kicker">Textbausteine</p>
+              <h2 id="text-block-editor-heading">Textbaustein auswählen</h2>
+              <fieldset id="text-block-editor-fields" disabled>
+                <label>Bezeichnung / Titel<input name="title" maxlength="255" required></label>
+                <label>Schlüssel<input name="key" maxlength="100" pattern="[A-Za-z0-9][A-Za-z0-9_-]*" placeholder="standard_cta" required></label>
+                <label>Kategorie<input name="category" maxlength="100" placeholder="Allgemein"></label>
+                <div class="text-block-options"><label><input name="isActive" type="checkbox" checked> Aktiv</label><label>Sortierung<input name="sortOrder" type="number" min="-1000000" max="1000000" value="0" required></label></div>
+                <label>Inhalt<textarea name="content" rows="16" maxlength="50000"></textarea></label>
+                <section class="text-block-placeholder-section" aria-labelledby="text-block-placeholder-heading">
+                  <strong id="text-block-placeholder-heading">Verfügbare Schlüssel</strong>
+                  <div id="text-block-placeholders" class="text-block-placeholders" aria-live="polite"></div>
+                  <p class="field-hint">Ein Klick fügt den Schlüssel an der Cursorposition ein. Markierter Text wird ersetzt.</p>
+                </section>
+                <div class="button-row"><button class="button button-primary" type="submit">Speichern</button><button id="text-block-delete" class="button button-quiet" type="button">Löschen</button></div>
+              </fieldset>
+            </form>
+          </div>
+        </section>
+        <form id="email-settings-form" class="panel settings-panel admin-tab-panel" hidden>
+          <div class="panel-heading compact"><div><p class="section-kicker">SMTP</p><h2>E-Mail-Konfiguration</h2></div><span id="email-password-status" class="status-badge">Kein Passwort gespeichert</span></div>
+          <label class="email-enabled"><input name="enabled" type="checkbox"> E-Mail-Versand aktiv</label>
+          <div class="email-settings-grid">
+            <label>SMTP-Host<input name="host" maxlength="255" placeholder="smtp.example.com"></label>
+            <label>SMTP-Port<input name="port" type="number" min="1" max="65535" value="587" required></label>
+            <label>Verschlüsselung<select name="encryption"><option value="none">Keine</option><option value="tls">STARTTLS</option><option value="ssl">TLS/SSL</option></select></label>
+            <label>SMTP-Benutzername<input name="user" maxlength="255" autocomplete="username"></label>
+          </div>
+          <label>Neues SMTP-Passwort<input name="password" type="password" maxlength="4096" autocomplete="new-password" placeholder="Leer lassen, um vorhandenes Passwort zu behalten"></label>
+          <div class="email-settings-grid">
+            <label>Absender-E-Mail<input name="fromEmail" type="email" maxlength="254"></label>
+            <label>Absendername<input name="fromName" maxlength="255"></label>
+            <label>Reply-To-Adresse<input name="replyTo" type="email" maxlength="254"></label>
+          </div>
+          <p class="field-hint">Es wird beim Speichern keine Test- oder externe E-Mail versendet.</p>
+          <div class="button-row"><button class="button button-primary" type="submit">E-Mail-Konfiguration speichern</button></div>
+        </form>
+        <form id="password-form" class="panel settings-panel admin-tab-panel" hidden>
+          <div class="panel-heading compact"><div><p class="section-kicker">Sicherheit</p><h2>Admin-Konto</h2></div></div>
+          <label for="current-password">Aktuelles Passwort</label><input id="current-password" name="currentPassword" type="password" required>
+          <label for="new-password">Neues Passwort</label><input id="new-password" name="newPassword" type="password" minlength="12" maxlength="1024" required>
+          <label for="new-password-repeat">Neues Passwort wiederholen</label><input id="new-password-repeat" name="newPasswordRepeat" type="password" minlength="12" maxlength="1024" required>
+          <div class="button-row"><button class="button button-primary" type="submit">Passwort ändern</button></div>
+        </form>
+      </section>
+
+      <section id="imprint-view" class="standalone-view legal-view" data-view="imprint" hidden>
+        <p class="section-kicker">Rechtliches</p><h1>Impressum</h1>
+        <div id="imprint-content" class="legal-content"></div>
+      </section>
+
+      <section id="privacy-view" class="standalone-view legal-view" data-view="privacy" hidden>
+        <p class="section-kicker">Rechtliches</p><h1>Datenschutz</h1>
+        <div id="privacy-content" class="legal-content"></div>
+      </section>
+
+      <section class="publish-bar panel" data-view="home">
+        <div>
+          <p class="section-kicker">Bereit für den nächsten Schritt?</p>
+          <h2>Mock-Veröffentlichung</h2>
+          <p class="muted">Es werden keine externen APIs aufgerufen.</p>
+        </div>
+        <button id="publish-button" class="button button-primary" type="button">Veröffentlichen</button>
+      </section>
+
+      <section class="panel results-panel" data-view="home">
+        <div class="panel-heading compact">
+          <div>
+            <p class="section-kicker">Aktivität</p>
+            <h2>Veröffentlichungsstatus</h2>
+          </div>
+        </div>
+        <div id="publish-results" class="results-list empty-state">Noch keine Veröffentlichung durchgeführt.</div>
+      </section>
+
+      <section class="panel history-panel" data-view="home">
+        <div class="panel-heading compact">
+          <div>
+            <p class="section-kicker">Lokal gespeichert</p>
+            <h2>Veröffentlichungsverlauf</h2>
+          </div>
+          <button id="clear-history-button" class="button button-quiet" type="button">Verlauf löschen</button>
+        </div>
+        <div id="history-list" class="history-list empty-state">Noch keine Einträge vorhanden.</div>
+      </section>
+    </main>
+    <footer class="site-footer"><div><a href="#/impressum">Impressum</a><a href="#/datenschutz">Datenschutz</a></div><span>© <span id="current-year"></span> Social Post</span></footer>
+    <script type="module" src="js/app.js?v=central-post-editor"></script>
+  </body>
+</html>
