@@ -1,10 +1,10 @@
 # Social Post
 
-Lokale Social-Publishing-App mit Vanilla-JavaScript, PHP 8.3/Apache und MariaDB 11. LinkedIn OAuth ist implementiert; Instagram, Facebook und das Publishing bleiben providerneutrale Mock-Module.
+Lokale Social-Publishing-App mit Vanilla-JavaScript, PHP 8.3-FPM/nginx und MariaDB 11. LinkedIn OAuth ist implementiert; Instagram, Facebook und das Publishing bleiben providerneutrale Mock-Module.
 
 ## Sichere Struktur
 
-Nur `public/` ist Apache-DocumentRoot. Backend, Datenbankdefinitionen, Docker-Dateien, Skripte, Tests, README und `.env` liegen außerhalb des Webroots. Apache blockiert zusätzlich Dotfiles und interne Dateitypen und setzt eine restriktive Content Security Policy.
+Nur `public/` ist der nginx-Webroot. Backend, Datenbankdefinitionen, Docker-Dateien, Skripte, Tests, README und `.env` liegen außerhalb des Webroots. nginx blockiert zusätzlich Dotfiles und interne Dateitypen und setzt eine restriktive Content Security Policy.
 
 ## Lokaler Start
 
@@ -22,12 +22,12 @@ Container starten und den Admin einmalig anlegen:
 
 ```bash
 docker compose up -d --build --wait
-docker compose exec web php scripts/seed-admin.php
+docker compose exec php php scripts/seed-admin.php
 ```
 
 Der Seed läuft ausschließlich explizit, überschreibt keine Benutzer und ist in `APP_ENV=production` deaktiviert. Das Admin-Passwort steht nur in `.env` und wird als `password_hash()` gespeichert.
 
-App: `http://localhost:8080/`
+App: `http://localhost:18080/`
 
 ## Sicherheit
 
@@ -51,7 +51,7 @@ Für LinkedIn wird OpenID Connect mit den Scopes `openid profile` verwendet. Nac
 Lokale Redirect URI für die LinkedIn Developer App:
 
 ```text
-http://localhost:8080/api/oauth/linkedin/callback
+http://localhost:18080/api/oauth/linkedin/callback
 ```
 
 Automatische Tests verwenden ausschließlich einen lokalen LinkedIn-Mock. Sie kontaktieren LinkedIn nicht.
@@ -63,7 +63,7 @@ Der Admin-Reiter **Textbausteine** verwaltet normale und geschützte System-Text
 Bestehende lokale Datenbanken werden idempotent aktualisiert mit:
 
 ```bash
-docker compose exec web php scripts/migrate.php
+docker compose exec php php scripts/migrate.php
 ```
 
 Dabei ergänzt `database/migrations/004-text-block-system-model.sql` die Spalte `is_system`. Bereits bearbeitete Inhalte werden vom Systembaustein-Katalog nicht überschrieben.
@@ -83,18 +83,51 @@ Der vierte Admin-Reiter verwaltet die lokale SMTP-Konfiguration mit Aktivstatus,
 Bestehende lokale Datenbanken erhalten die Singleton-Tabelle `email_settings` mit:
 
 ```bash
-docker compose exec web php scripts/migrate.php
+docker compose exec php php scripts/migrate.php
 ```
 
 ## Tests
 
-Die isolierte Suite startet eine eigene Compose-Umgebung auf Port 18080 und entfernt deren Testvolume anschließend:
+Die isolierte Suite startet eine eigene Compose-Umgebung standardmäßig auf Port 18081 und entfernt deren Testvolume anschließend. Bei einem Portkonflikt kann beispielsweise `SOCIAL_POST_TEST_PORT=18082` vorangestellt werden:
 
 ```bash
 bash tests/run-all.sh
 ```
 
-Die Browser-Modultests sind in der Entwicklungsumgebung zusätzlich unter `http://localhost:8080/tests/test.html` erreichbar. Sie enthalten keine Zugangsdaten.
+Die Browser-Modultests sind in der Entwicklungsumgebung zusätzlich unter `http://localhost:18080/tests/test.html` erreichbar. Sie enthalten keine Zugangsdaten.
+
+## Produktionsbetrieb
+
+Die Zielarchitektur ist Host-nginx → `127.0.0.1:18080` → SocialDeck-nginx → PHP-FPM → MariaDB. Nur der Container-nginx veröffentlicht einen Host-Port, standardmäßig ausschließlich auf localhost. PHP-FPM und MariaDB sind nur im internen Compose-Netz erreichbar; das MariaDB-Volume `mariadb_data` bleibt persistent. Die Produktivkonfiguration wird getrennt geladen:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.prod.yml config
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.yml -f docker-compose.prod.yml exec php php scripts/migrate.php
+```
+
+Auf dem Server werden neue produktive Werte in einer nicht versionierten `.env` benötigt. `APP_ENV=production`, `DB_NAME=social_deck` und `DB_USER=social_deck` sind in der Produktions-Compose-Datei festgelegt. Lokale Secrets dürfen nicht übernommen werden.
+
+Für Updates:
+
+```bash
+cd /opt/socialdeck
+git pull --ff-only
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.yml -f docker-compose.prod.yml exec php php scripts/migrate.php
+```
+
+Vor Migrationen ist ein konsistenter MariaDB-Dump in ein nur für Administratoren lesbares Backup-Verzeichnis zu schreiben. Das persistente Volume darf nicht mit `docker compose down -v` entfernt werden.
+
+`deployment/nginx/socialdeck.conf.example` ist die Vorlage für den Host-nginx unter `socail.roederstein.de`. Nach Aktivierung und erfolgreichem `nginx -t` kann HTTPS mit `certbot --nginx -d socail.roederstein.de` eingerichtet werden; die systemeigene automatische Certbot-Erneuerung ist anschließend zu prüfen. Noch vor dem LinkedIn-Live-Test ist als produktive Redirect URI `https://socail.roederstein.de/api/oauth/linkedin/callback` einzutragen. Die Route wird unverändert durch beide nginx-Ebenen an PHP-FPM weitergeleitet.
+
+Der Admin-Seed verwendet nun den Service `php`:
+
+```bash
+docker compose exec php php scripts/seed-admin.php
+```
+
+Er ist absichtlich nur außerhalb von `APP_ENV=production` zulässig; die initiale Admin-Erzeugung muss vor dem Umschalten auf Produktion oder über einen separat kontrollierten Betriebsprozess erfolgen.
 
 ## Datenmodell
 

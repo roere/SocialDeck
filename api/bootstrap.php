@@ -7,7 +7,7 @@ require_once __DIR__.'/linkedin-oauth.php';
 require_once __DIR__.'/text-block-placeholders.php';
 require_once __DIR__.'/text-blocks.php';
 require_once __DIR__.'/email-settings.php';
-function db(): PDO { static $pdo; if($pdo instanceof PDO)return $pdo; $dsn=sprintf('mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4',envValue('DB_HOST','db'),envValue('DB_PORT','3306'),envValue('DB_NAME','social_post')); return $pdo=new PDO($dsn,envValue('DB_USER','social_post'),envValue('DB_PASSWORD',''),[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_EMULATE_PREPARES=>false,PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC]); }
+function db(): PDO { static $pdo; if($pdo instanceof PDO)return $pdo; $dsn=sprintf('mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4',envValue('DB_HOST','db'),envValue('DB_PORT','3306'),envValue('DB_NAME','social_deck')); return $pdo=new PDO($dsn,envValue('DB_USER','social_deck'),envValue('DB_PASSWORD',''),[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_EMULATE_PREPARES=>false,PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC]); }
 function jsonResponse(array $body,int $status=200,array $headers=[]): never { http_response_code($status); header('Content-Type: application/json; charset=utf-8'); foreach($headers as $name=>$value)header($name.': '.$value); echo json_encode($body,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES); exit; }
 function ok(array $data=[],int $status=200): never { jsonResponse(['ok'=>true,'data'=>$data],$status); }
 function fail(string $code,string $message,int $status,array $headers=[]): never { jsonResponse(['ok'=>false,'error'=>['code'=>$code,'message'=>$message]],$status,$headers); }

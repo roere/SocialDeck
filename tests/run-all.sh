@@ -6,16 +6,16 @@ project=social-post-security-test
 test_port=${SOCIAL_POST_TEST_PORT:-18081}
 base_url="http://127.0.0.1:$test_port"
 callback_url="$base_url/api/oauth/linkedin/callback"
-export APP_ENV=local DB_HOST=db DB_PORT=3306 DB_NAME=social_post DB_USER=social_post INITIAL_ADMIN_USERNAME=testadmin INITIAL_ADMIN_EMAIL=testadmin@example.test
+export APP_ENV=local DB_HOST=db DB_PORT=3306 DB_NAME=social_deck DB_USER=social_deck INITIAL_ADMIN_USERNAME=testadmin INITIAL_ADMIN_EMAIL=testadmin@example.test
 export APP_ENCRYPTION_KEY=$(openssl rand -base64 32 | tr -d '\n') DB_PASSWORD=$(openssl rand -base64 24 | tr -d '\n') DB_ROOT_PASSWORD=$(openssl rand -base64 24 | tr -d '\n') INITIAL_ADMIN_PASSWORD=$(openssl rand -base64 24 | tr -d '\n')
 compose=(docker compose -p "$project" -f docker-compose.yml -f docker-compose.test.yml)
 cleanup(){ "${compose[@]}" down -v --remove-orphans >/dev/null 2>&1 || true; }
 trap cleanup EXIT
 "${compose[@]}" up -d --build --wait >/dev/null
-"${compose[@]}" exec -T web php scripts/migrate.php >/dev/null
-"${compose[@]}" exec -T web php scripts/migrate.php >/dev/null
-"${compose[@]}" exec -T web php scripts/seed-admin.php >/dev/null
-"${compose[@]}" exec -d web php -S 127.0.0.1:19090 tests/mock-linkedin-router.php
+"${compose[@]}" exec -T php php scripts/migrate.php >/dev/null
+"${compose[@]}" exec -T php php scripts/migrate.php >/dev/null
+"${compose[@]}" exec -T php php scripts/seed-admin.php >/dev/null
+"${compose[@]}" exec -d php php -S 127.0.0.1:19090 tests/mock-linkedin-router.php
 pass=0; fail=0
 check(){ if "$@"; then printf 'PASS %s\n' "$*"; pass=$((pass+1)); else printf 'FAIL %s\n' "$*"; fail=$((fail+1)); fi; }
 status(){ curl -sS -o /tmp/social-post-test-body -w '%{http_code}' "$@"; }
@@ -109,10 +109,10 @@ code=$(status -X POST -b "$cookie" -c "$cookie" -H "X-CSRF-Token: $csrf" $base_u
 csrf_json=$(curl -sS -c "$cookie" $base_url/api/auth/csrf);csrf=$(printf '%s' "$csrf_json"|sed -n 's/.*"csrfToken":"\([a-f0-9]*\)".*/\1/p');login=$(printf '{"login":"%s","password":"%s"}' "$INITIAL_ADMIN_USERNAME" "$new_password");response=$(curl -sS -b "$cookie" -c "$cookie" -H 'Content-Type: application/json' -H "X-CSRF-Token: $csrf" --data "$login" $base_url/api/auth/login);csrf=$(printf '%s' "$response"|sed -n 's/.*"csrfToken":"\([a-f0-9]*\)".*/\1/p');check test -n "$csrf"
 "${compose[@]}" exec -T db sh -lc 'mariadb -u"$MARIADB_USER" -p"$MARIADB_PASSWORD" "$MARIADB_DATABASE" -e "UPDATE users SET role=\"user\" WHERE username=\"testadmin\""';code=$(status -b "$cookie" $base_url/api/admin/providers);check test "$code" = 403;"${compose[@]}" exec -T db sh -lc 'mariadb -u"$MARIADB_USER" -p"$MARIADB_PASSWORD" "$MARIADB_DATABASE" -e "UPDATE users SET role=\"admin\" WHERE username=\"testadmin\""'
 csrf_json=$(curl -sS -c "$cookie" $base_url/api/auth/csrf);csrf=$(printf '%s' "$csrf_json"|sed -n 's/.*"csrfToken":"\([a-f0-9]*\)".*/\1/p');response=$(curl -sS -b "$cookie" -c "$cookie" -H 'Content-Type: application/json' -H "X-CSRF-Token: $csrf" --data "$login" $base_url/api/auth/login);csrf=$(printf '%s' "$response"|sed -n 's/.*"csrfToken":"\([a-f0-9]*\)".*/\1/p');"${compose[@]}" exec -T db sh -lc 'mariadb -u"$MARIADB_USER" -p"$MARIADB_PASSWORD" "$MARIADB_DATABASE" -e "UPDATE users SET is_active=0 WHERE username=\"testadmin\""';code=$(status -b "$cookie" $base_url/api/admin/providers);check test "$code" = 401;"${compose[@]}" exec -T db sh -lc 'mariadb -u"$MARIADB_USER" -p"$MARIADB_PASSWORD" "$MARIADB_DATABASE" -e "UPDATE users SET is_active=1 WHERE username=\"testadmin\""'
-crypto=$("${compose[@]}" exec -T web php tests/crypto-unit.php);while IFS= read -r line;do printf '%s\n' "$line";pass=$((pass+1));done<<<"$crypto"
-oauth_state=$("${compose[@]}" exec -T web php tests/oauth-state-unit.php);while IFS= read -r line;do printf '%s\n' "$line";pass=$((pass+1));done<<<"$oauth_state"
-text_block_resolution=$("${compose[@]}" exec -T web php tests/text-block-resolution-unit.php);while IFS= read -r line;do printf '%s\n' "$line";pass=$((pass+1));done<<<"$text_block_resolution"
-text_block_seed=$("${compose[@]}" exec -T web php tests/text-block-system-seed.php);while IFS= read -r line;do printf '%s\n' "$line";pass=$((pass+1));done<<<"$text_block_seed"
-for value in '' invalid YWJj;do if "${compose[@]}" exec -T -e APP_ENCRYPTION_KEY="$value" web php tests/crypto-unit.php key >/dev/null;then printf 'PASS Encryption-Key-Fehlerfall\n';pass=$((pass+1));else printf 'FAIL Encryption-Key-Fehlerfall\n';fail=$((fail+1));fi;done
+crypto=$("${compose[@]}" exec -T php php tests/crypto-unit.php);while IFS= read -r line;do printf '%s\n' "$line";pass=$((pass+1));done<<<"$crypto"
+oauth_state=$("${compose[@]}" exec -T php php tests/oauth-state-unit.php);while IFS= read -r line;do printf '%s\n' "$line";pass=$((pass+1));done<<<"$oauth_state"
+text_block_resolution=$("${compose[@]}" exec -T php php tests/text-block-resolution-unit.php);while IFS= read -r line;do printf '%s\n' "$line";pass=$((pass+1));done<<<"$text_block_resolution"
+text_block_seed=$("${compose[@]}" exec -T php php tests/text-block-system-seed.php);while IFS= read -r line;do printf '%s\n' "$line";pass=$((pass+1));done<<<"$text_block_seed"
+for value in '' invalid YWJj;do if "${compose[@]}" exec -T -e APP_ENCRYPTION_KEY="$value" php php tests/crypto-unit.php key >/dev/null;then printf 'PASS Encryption-Key-Fehlerfall\n';pass=$((pass+1));else printf 'FAIL Encryption-Key-Fehlerfall\n';fail=$((fail+1));fi;done
 browser=$(chromium --headless --no-sandbox --disable-gpu --virtual-time-budget=4000 --dump-dom $base_url/tests/test.html 2>/dev/null);browser_pass=$(printf '%s' "$browser"|awk '{n+=gsub(/PASS /,"&")}END{print n+0}');browser_fail=$(printf '%s' "$browser"|awk '{n+=gsub(/FAIL /,"&")}END{print n+0}');pass=$((pass+browser_pass));fail=$((fail+browser_fail));printf 'Browser: PASS=%d FAIL=%d\n' "$browser_pass" "$browser_fail"
 printf 'TOTAL PASS=%d FAIL=%d\n' "$pass" "$fail";test "$fail" -eq 0

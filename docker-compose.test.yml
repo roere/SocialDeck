@@ -1,12 +1,13 @@
 services:
-  web:
+  nginx:
+    ports: !override
+      - "127.0.0.1:${SOCIAL_POST_TEST_PORT:-18081}:80"
+  php:
     environment:
       APP_ENV: test
       LINKEDIN_AUTHORIZE_ENDPOINT: http://127.0.0.1:19090/authorize
       LINKEDIN_TOKEN_ENDPOINT: http://127.0.0.1:19090/token
       LINKEDIN_USERINFO_ENDPOINT: http://127.0.0.1:19090/userinfo
-    ports: !override
-      - "${SOCIAL_POST_TEST_PORT:-18081}:80"
   db:
     volumes:
       - test_mariadb_data:/var/lib/mysql
