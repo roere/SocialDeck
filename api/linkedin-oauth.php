@@ -6,8 +6,8 @@ final class OAuthException extends RuntimeException {
 }
 
 function linkedInEndpoint(string $type): string {
-    $official=['authorize'=>'https://www.linkedin.com/oauth/v2/authorization','token'=>'https://www.linkedin.com/oauth/v2/accessToken','userinfo'=>'https://api.linkedin.com/v2/userinfo'];
-    $override=['authorize'=>'LINKEDIN_AUTHORIZE_ENDPOINT','token'=>'LINKEDIN_TOKEN_ENDPOINT','userinfo'=>'LINKEDIN_USERINFO_ENDPOINT'][$type];
+    $official=['authorize'=>'https://www.linkedin.com/oauth/v2/authorization','token'=>'https://www.linkedin.com/oauth/v2/accessToken','userinfo'=>'https://api.linkedin.com/v2/userinfo','api'=>'https://api.linkedin.com'];
+    $override=['authorize'=>'LINKEDIN_AUTHORIZE_ENDPOINT','token'=>'LINKEDIN_TOKEN_ENDPOINT','userinfo'=>'LINKEDIN_USERINFO_ENDPOINT','api'=>'LINKEDIN_API_ENDPOINT'][$type];
     return envValue('APP_ENV','local')==='test' ? (envValue($override,$official[$type])??$official[$type]) : $official[$type];
 }
 function base64Url(string $bytes): string { return rtrim(strtr(base64_encode($bytes),'+/','-_'),'='); }
@@ -24,7 +24,12 @@ function linkedInHttpJson(string $method,string $url,array $headers=[],?array $f
     $options=['http'=>['method'=>$method,'timeout'=>10,'ignore_errors'=>true,'header'=>implode("\r\n",$headers)]];
     if($form!==null){$options['http']['content']=http_build_query($form,'','&',PHP_QUERY_RFC3986);$options['http']['header'].="\r\nContent-Type: application/x-www-form-urlencoded";}
     $body=@file_get_contents($url,false,stream_context_create($options));$responseHeaders=$http_response_header??[];$status=0;if(isset($responseHeaders[0])&&preg_match('#\s(\d{3})\s#',$responseHeaders[0],$match))$status=(int)$match[1];
-    if($body===false||$status<200||$status>=300)throw new OAuthException('LINKEDIN_UPSTREAM','LinkedIn hat die Anfrage abgelehnt.',502);
+    if($body===false||$status<200||$status>=300){
+        if($status===401)throw new OAuthException('LINKEDIN_TOKEN_EXPIRED','Die LinkedIn-Verbindung ist abgelaufen. Bitte LinkedIn erneut verbinden.',422);
+        if($status===403)throw new OAuthException('LINKEDIN_ORGANIZATION_PERMISSION','Unternehmensseiten können derzeit nicht ausgelesen werden. Zusätzliche LinkedIn-Produkt- oder Scope-Berechtigung erforderlich.',422);
+        if($status===429)throw new OAuthException('LINKEDIN_RATE_LIMIT','LinkedIn erlaubt derzeit keine weitere Aktualisierung. Bitte später erneut versuchen.',429);
+        throw new OAuthException('LINKEDIN_UPSTREAM','LinkedIn hat die Anfrage abgelehnt.',502);
+    }
     if(strlen($body)>1048576)throw new OAuthException('LINKEDIN_RESPONSE','LinkedIn hat eine ungültige Antwort geliefert.',502);
     try{$data=json_decode($body,true,32,JSON_THROW_ON_ERROR);}catch(JsonException){throw new OAuthException('LINKEDIN_RESPONSE','LinkedIn hat eine ungültige Antwort geliefert.',502);}
     if(!is_array($data))throw new OAuthException('LINKEDIN_RESPONSE','LinkedIn hat eine ungültige Antwort geliefert.',502);return $data;
@@ -48,9 +53,16 @@ function linkedInCallback(): never {
     $access=$token['access_token']??null;if(!is_string($access)||$access===''||strlen($access)>16384)throw new OAuthException('LINKEDIN_TOKEN','LinkedIn hat kein gültiges Access Token geliefert.',502);$expires=$token['expires_in']??null;if($expires!==null&&(!is_int($expires)||$expires<1||$expires>315360000))throw new OAuthException('LINKEDIN_TOKEN','LinkedIn hat eine ungültige Token-Laufzeit geliefert.',502);$refresh=$token['refresh_token']??null;if($refresh!==null&&(!is_string($refresh)||$refresh===''||strlen($refresh)>16384))throw new OAuthException('LINKEDIN_TOKEN','LinkedIn hat ein ungültiges Refresh Token geliefert.',502);
     $identity=linkedInHttpJson('GET',linkedInEndpoint('userinfo'),['Accept: application/json','Authorization: Bearer '.$access]);$external=$identity['sub']??null;$name=$identity['name']??null;if(!is_string($external)||$external===''||strlen($external)>255||!is_string($name)||trim($name)===''||strlen($name)>255)throw new OAuthException('LINKEDIN_IDENTITY','LinkedIn hat keine gültige Account-Identität geliefert.',502);
     $scopes=is_string($token['scope']??null)?implode("\n",array_values(array_unique(array_filter(array_map('trim',preg_split('/[\s,]+/',$token['scope'])))))):implode("\n",$config['scopes']);if(strlen($scopes)>4000)throw new OAuthException('LINKEDIN_TOKEN','LinkedIn hat ungültige Scopes geliefert.',502);$expiry=is_int($expires)?date('Y-m-d H:i:s',time()+$expires):null;$now=date('Y-m-d H:i:s');$accessEncrypted=encryptSecret($access);$refreshEncrypted=is_string($refresh)?encryptSecret($refresh):null;
-    db()->prepare('INSERT INTO social_accounts(provider_id,external_account_id,display_name,account_type,access_token_encrypted,refresh_token_encrypted,token_expires_at,scopes,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE display_name=VALUES(display_name),account_type=VALUES(account_type),access_token_encrypted=VALUES(access_token_encrypted),refresh_token_encrypted=VALUES(refresh_token_encrypted),token_expires_at=VALUES(token_expires_at),scopes=VALUES(scopes),status=VALUES(status),updated_at=VALUES(updated_at)')->execute(['linkedin',$external,trim($name),'member',$accessEncrypted,$refreshEncrypted,$expiry,$scopes,'connected',$now,$now]);
+    $pdo=db();$pdo->beginTransaction();
+    try{
+        $pdo->prepare('INSERT INTO social_accounts(provider_id,external_account_id,display_name,account_type,access_token_encrypted,refresh_token_encrypted,token_expires_at,scopes,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE display_name=VALUES(display_name),account_type=VALUES(account_type),access_token_encrypted=VALUES(access_token_encrypted),refresh_token_encrypted=VALUES(refresh_token_encrypted),token_expires_at=VALUES(token_expires_at),scopes=VALUES(scopes),status=VALUES(status),updated_at=VALUES(updated_at)')->execute(['linkedin',$external,trim($name),'member',$accessEncrypted,$refreshEncrypted,$expiry,$scopes,'connected',$now,$now]);
+        $accountStatement=$pdo->prepare("SELECT id FROM social_accounts WHERE provider_id='linkedin' AND external_account_id=?");$accountStatement->execute([$external]);$accountId=(int)$accountStatement->fetchColumn();
+        upsertLinkedInPersonalChannel($pdo,$accountId,$external,trim($name),preg_split('/\s+/',$scopes)?:[],$now);
+        $pdo->commit();
+    }catch(Throwable $exception){if($pdo->inTransaction())$pdo->rollBack();throw $exception;}
+    try{syncLinkedInOrganizationChannels(false,$accountId);}catch(OAuthException){/* Verbindung bleibt erhalten; Status und manueller Sync erklären fehlende Rechte. */}
     linkedInAdminRedirect('connected');
 }
 function disconnectLinkedIn(): never {
-    requireAdmin();requireCsrf();$data=input();$id=$data['accountId']??null;if(!is_int($id)||$id<1)fail('INVALID_INPUT','accountId muss eine positive Ganzzahl sein.',422);$stmt=db()->prepare("UPDATE social_accounts SET access_token_encrypted=NULL,refresh_token_encrypted=NULL,token_expires_at=NULL,status='disconnected',updated_at=? WHERE id=? AND provider_id='linkedin'");$stmt->execute([date('Y-m-d H:i:s'),$id]);if($stmt->rowCount()!==1)fail('NOT_FOUND','LinkedIn-Account nicht gefunden.',404);ok(['accountId'=>$id,'status'=>'disconnected']);
+    requireAdmin();requireCsrf();$data=input();$id=$data['accountId']??null;if(!is_int($id)||$id<1)fail('INVALID_INPUT','accountId muss eine positive Ganzzahl sein.',422);$now=date('Y-m-d H:i:s');$pdo=db();$pdo->beginTransaction();try{$stmt=$pdo->prepare("UPDATE social_accounts SET access_token_encrypted=NULL,refresh_token_encrypted=NULL,token_expires_at=NULL,status='disconnected',updated_at=? WHERE id=? AND provider_id='linkedin'");$stmt->execute([$now,$id]);if($stmt->rowCount()!==1){$pdo->rollBack();fail('NOT_FOUND','LinkedIn-Account nicht gefunden.',404);}$pdo->prepare("UPDATE social_channels SET status='inactive',can_publish=0,updated_at=? WHERE social_account_id=?")->execute([$now,$id]);$pdo->commit();}catch(Throwable $exception){if($pdo->inTransaction())$pdo->rollBack();throw $exception;}ok(['accountId'=>$id,'status'=>'disconnected']);
 }

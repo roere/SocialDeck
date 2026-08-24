@@ -8,6 +8,7 @@ services:
       LINKEDIN_AUTHORIZE_ENDPOINT: http://127.0.0.1:19090/authorize
       LINKEDIN_TOKEN_ENDPOINT: http://127.0.0.1:19090/token
       LINKEDIN_USERINFO_ENDPOINT: http://127.0.0.1:19090/userinfo
+      LINKEDIN_API_ENDPOINT: http://127.0.0.1:19090
   db:
     volumes:
       - test_mariadb_data:/var/lib/mysql

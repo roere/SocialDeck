@@ -3,7 +3,7 @@ import { createId } from "./utils.js";
 export function createPost(values = {}) {
   const now = new Date().toISOString();
   const baseText=values.baseText??values.text??"",variants=values.variants&&typeof values.variants==="object"?values.variants:{};
-  return { id: values.id || createId("post"), baseText, link: values.link || "", media: Array.isArray(values.media)?values.media:[], selectedProviders:Array.isArray(values.selectedProviders)?values.selectedProviders:[], variants, createdAt: values.createdAt || now, updatedAt: values.updatedAt||now, status: values.status || "draft" };
+  return { id: values.id || createId("post"), baseText, link: values.link || "", media: Array.isArray(values.media)?values.media:[], selectedProviders:Array.isArray(values.selectedProviders)?values.selectedProviders:[], selectedChannels:Array.isArray(values.selectedChannels)?values.selectedChannels:[], variants, createdAt: values.createdAt || now, updatedAt: values.updatedAt||now, status: values.status || "draft" };
 }
 
 export function validatePost(post) {

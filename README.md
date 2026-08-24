@@ -119,7 +119,7 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml exec php php scr
 
 Vor Migrationen ist ein konsistenter MariaDB-Dump in ein nur für Administratoren lesbares Backup-Verzeichnis zu schreiben. Das persistente Volume darf nicht mit `docker compose down -v` entfernt werden.
 
-`deployment/nginx/socialdeck.conf.example` ist die Vorlage für den Host-nginx unter `socail.roederstein.de`. Nach Aktivierung und erfolgreichem `nginx -t` kann HTTPS mit `certbot --nginx -d socail.roederstein.de` eingerichtet werden; die systemeigene automatische Certbot-Erneuerung ist anschließend zu prüfen. Noch vor dem LinkedIn-Live-Test ist als produktive Redirect URI `https://socail.roederstein.de/api/oauth/linkedin/callback` einzutragen. Die Route wird unverändert durch beide nginx-Ebenen an PHP-FPM weitergeleitet.
+`deployment/nginx/socialdeck.conf.example` ist die Vorlage für den Host-nginx unter `social.roederstein.de`. Nach Aktivierung und erfolgreichem `nginx -t` kann HTTPS mit `certbot --nginx -d social.roederstein.de` eingerichtet werden; die systemeigene automatische Certbot-Erneuerung ist anschließend zu prüfen. Noch vor dem LinkedIn-Live-Test ist als produktive Redirect URI `https://social.roederstein.de/api/oauth/linkedin/callback` einzutragen. Die Route wird unverändert durch beide nginx-Ebenen an PHP-FPM weitergeleitet.
 
 Der Admin-Seed verwendet nun den Service `php`:
 

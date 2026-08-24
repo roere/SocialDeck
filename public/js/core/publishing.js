@@ -1,17 +1,18 @@
 import { createId } from "./utils.js";
 import { createPost, validatePost } from "./post.js";
 
-export async function publishPost(values, providerIds, registry, storage, onUpdate = () => {}, resolveText = async text => text) {
+export async function publishPost(values, targets, registry, storage, onUpdate = () => {}, resolveText = async text => text) {
   const post = createPost(values);
   const generalValidation = validatePost(post);
   if (!generalValidation.valid) throw new Error(generalValidation.errors[0]);
-  if (!providerIds.length) throw new Error("Bitte wähle mindestens eine Plattform aus.");
+  if (!targets.length) throw new Error("Bitte wähle mindestens einen Kanal aus.");
   const jobs = [];
-  for (const providerId of providerIds) {
+  for (const target of targets) {
+    const channel=typeof target==="string"?null:target,providerId=typeof target==="string"?target:target.providerId;
     const provider = registry.get(providerId);
     if (!provider) continue;
     const variant=post.variants[providerId];
-    const job = { id: createId("job"), postId: post.id, providerId, accountId: null, status: "publishing", createdAt: new Date().toISOString(), publishedAt: null, externalPostId: null, finalText:null, error: null };
+    const job = { id: createId("job"), postId: post.id, providerId, socialAccountId:channel?.socialAccountId??null,channelId:channel?.id??null,channelType:channel?.channelType??null,externalChannelId:channel?.externalChannelId??null, accountId: channel?.socialAccountId??null, status: "publishing", createdAt: new Date().toISOString(), publishedAt: null, externalPostId: null, finalText:null, error: null };
     onUpdate({ type: "started", provider, job });
     try {
       if(!variant)throw new Error(`Keine Fassung für ${provider.name} vorhanden.`);

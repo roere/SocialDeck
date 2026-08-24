@@ -1,7 +1,7 @@
 server {
     listen 80;
     listen [::]:80;
-    server_name socail.roederstein.de;
+    server_name social.roederstein.de;
 
     location / {
         proxy_pass http://127.0.0.1:18080;

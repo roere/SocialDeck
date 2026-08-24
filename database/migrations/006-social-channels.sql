@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS social_channels (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  social_account_id BIGINT UNSIGNED NOT NULL,
+  provider_id VARCHAR(50) NOT NULL,
+  external_channel_id VARCHAR(255) NOT NULL,
+  channel_type ENUM('personal','organization') NOT NULL,
+  display_name VARCHAR(255) NOT NULL,
+  external_urn VARCHAR(500) NULL,
+  role VARCHAR(100) NULL,
+  can_publish TINYINT(1) NOT NULL DEFAULT 0 CHECK (can_publish IN (0,1)),
+  status ENUM('active','inactive','revoked') NOT NULL DEFAULT 'active',
+  metadata_json JSON NULL,
+  last_synced_at DATETIME NULL,
+  created_at DATETIME NOT NULL,
+  updated_at DATETIME NOT NULL,
+  CONSTRAINT fk_social_channels_account FOREIGN KEY (social_account_id) REFERENCES social_accounts(id) ON DELETE CASCADE,
+  UNIQUE KEY uq_social_channels_account_external (social_account_id,provider_id,external_channel_id),
+  KEY ix_social_channels_provider_status (provider_id,status),
+  KEY ix_social_channels_account (social_account_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
