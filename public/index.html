@@ -196,11 +196,21 @@
       <section class="publish-bar panel" data-view="home">
         <div>
           <p class="section-kicker">Bereit für den nächsten Schritt?</p>
-          <h2>Mock-Veröffentlichung</h2>
-          <p class="muted">Es werden keine externen APIs aufgerufen.</p>
+          <h2>Veröffentlichungsmodus</h2>
+          <label for="publish-mode">Modus</label>
+          <select id="publish-mode"><option value="mock" selected>Testmodus (Mock)</option><option value="linkedin-live">Echter LinkedIn-Test</option></select>
+          <p id="publish-mode-hint" class="muted">Im Mock-Modus werden keine externen APIs aufgerufen.</p>
         </div>
-        <button id="publish-button" class="button button-primary" type="button">Veröffentlichen</button>
+        <button id="publish-button" class="button button-primary" type="button">Im Mock veröffentlichen</button>
       </section>
+
+      <dialog id="linkedin-publish-confirmation" class="publish-confirmation">
+        <form method="dialog">
+          <p class="section-kicker">Echte Veröffentlichung</p><h2>Dieser Beitrag wird jetzt tatsächlich auf LinkedIn veröffentlicht.</h2>
+          <dl><dt>Zielkanal</dt><dd id="linkedin-confirm-channel"></dd><dt>Anzeigename</dt><dd id="linkedin-confirm-name"></dd><dt>Endgültiger Text</dt><dd><pre id="linkedin-confirm-text"></pre></dd><dt>Sichtbarkeit</dt><dd><select id="linkedin-confirm-visibility"><option value="PUBLIC">Öffentlich</option><option value="CONNECTIONS">Nur Kontakte</option></select></dd></dl>
+          <div class="button-row"><button class="button button-quiet" value="cancel">Abbrechen</button><button id="linkedin-confirm-publish" class="button button-primary" value="default">Jetzt auf LinkedIn veröffentlichen</button></div>
+        </form>
+      </dialog>
 
       <section class="panel results-panel" data-view="home">
         <div class="panel-heading compact">

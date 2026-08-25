@@ -26,5 +26,6 @@ export const api = {
   changePassword(values, csrfToken) { return request("/admin/password", { method: "PUT", headers: { "X-CSRF-Token": csrfToken }, body: JSON.stringify(values) }); },
   startLinkedIn(csrfToken) { return request("/oauth/linkedin/start", { headers: { Accept: "application/json", "X-CSRF-Token": csrfToken } }); },
   syncLinkedInChannels(csrfToken) { return request("/admin/providers/linkedin/channels/sync", { method: "POST", headers: { "X-CSRF-Token": csrfToken } }); },
-  disconnectLinkedIn(accountId, csrfToken) { return request("/oauth/linkedin/disconnect", { method: "POST", headers: { "X-CSRF-Token": csrfToken }, body: JSON.stringify({ accountId }) }); }
+  disconnectLinkedIn(accountId, csrfToken) { return request("/oauth/linkedin/disconnect", { method: "POST", headers: { "X-CSRF-Token": csrfToken }, body: JSON.stringify({ accountId }) }); },
+  publishLinkedInTestPost(values, csrfToken) { return request("/admin/linkedin/test-post", { method: "POST", headers: { "X-CSRF-Token": csrfToken }, body: JSON.stringify(values) }); }
 };

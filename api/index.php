@@ -3,7 +3,7 @@ declare(strict_types=1);
 require __DIR__.'/bootstrap.php';
 try {
     encryptionKey(); $method=$_SERVER['REQUEST_METHOD']??'GET'; $path=parse_url($_SERVER['REQUEST_URI']??'/',PHP_URL_PATH);
-    $routes=['/api/ping'=>['GET'],'/api/auth/csrf'=>['GET'],'/api/auth/login'=>['POST'],'/api/auth/logout'=>['POST'],'/api/auth/me'=>['GET'],'/api/text-blocks'=>['GET'],'/api/text-blocks/resolve'=>['POST'],'/api/admin/providers'=>['GET'],'/api/admin/providers/linkedin/channels/sync'=>['POST'],'/api/admin/legal'=>['GET','PUT'],'/api/admin/text-blocks'=>['GET','POST'],'/api/admin/email-settings'=>['GET','PUT'],'/api/legal'=>['GET'],'/api/admin/password'=>['PUT'],'/api/oauth/linkedin/start'=>['GET'],'/api/oauth/linkedin/callback'=>['GET'],'/api/oauth/linkedin/disconnect'=>['POST']];
+    $routes=['/api/ping'=>['GET'],'/api/auth/csrf'=>['GET'],'/api/auth/login'=>['POST'],'/api/auth/logout'=>['POST'],'/api/auth/me'=>['GET'],'/api/text-blocks'=>['GET'],'/api/text-blocks/resolve'=>['POST'],'/api/admin/providers'=>['GET'],'/api/admin/providers/linkedin/channels/sync'=>['POST'],'/api/admin/linkedin/test-post'=>['POST'],'/api/admin/legal'=>['GET','PUT'],'/api/admin/text-blocks'=>['GET','POST'],'/api/admin/email-settings'=>['GET','PUT'],'/api/legal'=>['GET'],'/api/admin/password'=>['PUT'],'/api/oauth/linkedin/start'=>['GET'],'/api/oauth/linkedin/callback'=>['GET'],'/api/oauth/linkedin/disconnect'=>['POST']];
     $providerRoute=preg_match('#^/api/admin/providers/([a-z0-9-]+)$#',(string)$path,$matches)===1;
     $textBlockRoute=preg_match('#^/api/admin/text-blocks/([1-9][0-9]*)$#',(string)$path,$textBlockMatches)===1;
     if(isset($routes[$path])&&!in_array($method,$routes[$path],true))fail('METHOD_NOT_ALLOWED','HTTP-Methode nicht erlaubt.',405,['Allow'=>implode(', ',$routes[$path])]);
@@ -24,7 +24,7 @@ try {
     if($path==='/api/oauth/linkedin/start')startLinkedInOAuth();
     if($path==='/api/oauth/linkedin/callback')linkedInCallback();
     if($path==='/api/oauth/linkedin/disconnect')disconnectLinkedIn();
-    if($path==='/api/admin/providers/linkedin/channels/sync')syncLinkedInOrganizationChannels();
+    if($path==='/api/admin/providers/linkedin/channels/sync')syncLinkedInOrganizationChannels();if($path==='/api/admin/linkedin/test-post')publishLinkedInTestPost();
     if($path==='/api/admin/text-blocks'&&$method==='GET')listTextBlocks();
     if($path==='/api/admin/text-blocks'&&$method==='POST')createTextBlock();
     if($textBlockRoute&&$method==='PUT')updateTextBlock((int)$textBlockMatches[1]);
