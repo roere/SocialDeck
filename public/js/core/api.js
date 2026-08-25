@@ -10,6 +10,7 @@ export const api = {
   login(login, password, csrfToken) { return request("/auth/login", { method: "POST", headers: { "X-CSRF-Token": csrfToken }, body: JSON.stringify({ login, password }) }); },
   logout(csrfToken) { return request("/auth/logout", { method: "POST", headers: { "X-CSRF-Token": csrfToken } }); },
   me() { return request("/auth/me"); },
+  getPosts() { return request("/posts"); },
   getProviders(csrfToken) { return request("/admin/providers", { headers: { "X-CSRF-Token": csrfToken } }); },
   saveProvider(providerId, config, csrfToken) { return request(`/admin/providers/${providerId}`, { method: "PUT", headers: { "X-CSRF-Token": csrfToken }, body: JSON.stringify(config) }); },
   getLegal(csrfToken) { return request("/admin/legal", { headers: { "X-CSRF-Token": csrfToken } }); },

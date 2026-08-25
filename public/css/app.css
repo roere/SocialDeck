@@ -43,6 +43,7 @@ h3 { margin-bottom: 12px; font-size: .9rem; }
 .post-text-block span { color: var(--teal); font-family: ui-monospace, monospace; font-size: .8rem; }
 .post-text-block small,.field-hint { color: var(--muted); font-size: .76rem; }
 .post-preview pre { min-height: 100px; margin: 12px 0 0; padding: 14px; border: 1px solid var(--line); border-radius: 5px; background: var(--wash); white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; line-height: 1.5; }
+#post-text-block-admin-action { margin-top: 10px; }
 .platform-variants { display: grid; grid-column: 1/-1; grid-template-columns: repeat(auto-fit,minmax(310px,1fr)); gap: 20px; }
 .platform-variants > .empty-state { padding: 24px; }
 .platform-variant { padding: 22px; }
@@ -175,9 +176,17 @@ textarea:focus, input:focus { border-color: var(--teal); box-shadow: 0 0 0 3px r
 .site-footer { display: flex; justify-content: space-between; gap: 20px; width: min(1160px, calc(100% - 32px)); margin: 0 auto; padding: 20px 0 28px; border-top: 1px solid rgba(217, 224, 229, .9); color: var(--muted); font-size: .78rem; }
 .site-footer div { display: flex; gap: 18px; }
 .results-list, .history-list { display: grid; gap: 10px; }
+.posts-list { display: grid; gap: 0; padding: 0 24px; overflow: hidden; }
+.posts-list.empty-state { padding: 24px; }
+.post-list-item { display: grid; grid-template-columns: minmax(180px,1fr) minmax(340px,1.5fr); gap: 24px; padding: 20px 0; border-bottom: 1px solid var(--line); }
+.post-list-item:last-child { border-bottom: 0; }
+.post-list-item p { margin: 0; overflow-wrap: anywhere; }
+.post-list-item dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 0; font-size: .78rem; }
+.post-list-item dt { color: var(--muted); font-weight: 800; }
+.post-list-item dd { margin: 0; overflow-wrap: anywhere; }
 .empty-state { color: var(--muted); font-size: .9rem; }
 .result-item, .history-item { display: grid; grid-template-columns: 1fr auto; gap: 10px 16px; padding: 14px; border: 1px solid var(--line); border-radius: 5px; }
 .result-item p, .history-item p { margin: 3px 0 0; color: var(--muted); font-size: .83rem; }
 .result-item .result-status, .history-status { color: var(--success); font-size: .8rem; font-weight: 800; text-align: right; }
 .history-item time { color: var(--muted); font-size: .78rem; }
-@media (max-width: 760px) { .topbar { flex-wrap: wrap; gap: 14px 20px; } .session-nav { margin-left: auto; } .app-shell { padding-top: 32px; } .workspace-grid,.post-editor { grid-template-columns: 1fr; } .base-editor { grid-row: auto; } .post-text-block-list { grid-template-columns: 1fr; } .platform-variants,.editor-footer { grid-column: auto; } .editor-footer { align-items: stretch; flex-direction: column; } .publish-bar { align-items: stretch; flex-direction: column; } .publish-bar .button { width: 100%; } .field-meta { align-items: flex-start; flex-direction: column; gap: 3px; } .result-item, .history-item { grid-template-columns: 1fr; } .result-item .result-status, .history-status { text-align: left; } .site-footer { align-items: flex-start; flex-direction: column; } .admin-tabs { overflow-x: auto; } .admin-tab { white-space: nowrap; } .text-block-layout { grid-template-columns: 1fr; } .text-block-editor { position: static; } .text-block-list { max-height: 360px; } .text-block-options, .email-settings-grid { grid-template-columns: 1fr; gap: 0; } }
+@media (max-width: 760px) { .topbar { flex-wrap: wrap; gap: 14px 20px; } .session-nav { margin-left: auto; } .app-shell { padding-top: 32px; } .workspace-grid,.post-editor { grid-template-columns: 1fr; } .base-editor { grid-row: auto; } .post-text-block-list { grid-template-columns: 1fr; } .platform-variants,.editor-footer { grid-column: auto; } .editor-footer { align-items: stretch; flex-direction: column; } .publish-bar { align-items: stretch; flex-direction: column; } .publish-bar .button { width: 100%; } .field-meta { align-items: flex-start; flex-direction: column; gap: 3px; } .result-item, .history-item, .post-list-item { grid-template-columns: 1fr; } .result-item .result-status, .history-status { text-align: left; } .site-footer { align-items: flex-start; flex-direction: column; } .admin-tabs { overflow-x: auto; } .admin-tab { white-space: nowrap; } .text-block-layout { grid-template-columns: 1fr; } .text-block-editor { position: static; } .text-block-list { max-height: 360px; } .text-block-options, .email-settings-grid { grid-template-columns: 1fr; gap: 0; } }

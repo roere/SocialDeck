@@ -11,6 +11,7 @@
       <a class="brand" href="#/">Social Post</a>
       <nav class="main-nav" aria-label="Hauptnavigation">
         <a href="#/" data-route-link="home">Start</a>
+        <a href="#/beitraege" data-route-link="posts" hidden>Beiträge</a>
         <a href="#/admin" data-route-link="admin" hidden>Admin</a>
       </nav>
       <div class="session-nav">
@@ -51,11 +52,14 @@
             <h3 id="post-text-block-heading">Textbaustein einfügen</h3>
             <input id="post-text-block-search" type="search" placeholder="Titel, Kategorie oder Schlüssel suchen">
             <div id="post-text-block-list" class="post-text-block-list"></div>
+            <div id="post-text-block-admin-action"></div>
           </section>
 
           <section class="post-preview" aria-labelledby="post-preview-heading">
             <h3 id="post-preview-heading">Vorschau</h3>
             <pre id="post-preview">Noch kein Basistext vorhanden.</pre>
+            <p id="post-link-preview" class="field-hint">Link: keiner</p>
+            <p class="field-hint">LinkedIn zeigt hier nur die übermittelte URL; SocialDeck erzeugt keine künstliche Linkvorschau.</p>
             <p id="post-preview-error" class="form-error" role="alert"></p>
           </section>
 
@@ -95,6 +99,11 @@
           <span id="draft-status" class="muted"></span>
         </div>
         </section>
+      </section>
+
+      <section id="posts-view" class="standalone-view" data-view="posts" hidden>
+        <header class="page-header"><p class="eyebrow">Gespeichert</p><h1>Beiträge</h1><p>Providerneutrale Beiträge und ihre Veröffentlichungsziele.</p></header>
+        <div id="posts-list" class="posts-list panel"><p class="empty-state">Noch keine Beiträge gespeichert.</p></div>
       </section>
 
       <section id="login-view" class="standalone-view" data-view="login" hidden>
@@ -198,16 +207,16 @@
           <p class="section-kicker">Bereit für den nächsten Schritt?</p>
           <h2>Veröffentlichungsmodus</h2>
           <label for="publish-mode">Modus</label>
-          <select id="publish-mode"><option value="mock" selected>Testmodus (Mock)</option><option value="linkedin-live">Echter LinkedIn-Test</option></select>
-          <p id="publish-mode-hint" class="muted">Im Mock-Modus werden keine externen APIs aufgerufen.</p>
+          <select id="publish-mode"><option value="mock" selected>Testmodus – nicht veröffentlichen</option><option value="linkedin-live">Echter LinkedIn-Test</option></select>
+          <p id="publish-mode-hint" class="muted">Es wird kein Beitrag an LinkedIn, Instagram oder Facebook gesendet.</p>
         </div>
-        <button id="publish-button" class="button button-primary" type="button">Im Mock veröffentlichen</button>
+        <button id="publish-button" class="button button-primary" type="button">Testversand starten</button>
       </section>
 
       <dialog id="linkedin-publish-confirmation" class="publish-confirmation">
         <form method="dialog">
           <p class="section-kicker">Echte Veröffentlichung</p><h2>Dieser Beitrag wird jetzt tatsächlich auf LinkedIn veröffentlicht.</h2>
-          <dl><dt>Zielkanal</dt><dd id="linkedin-confirm-channel"></dd><dt>Anzeigename</dt><dd id="linkedin-confirm-name"></dd><dt>Endgültiger Text</dt><dd><pre id="linkedin-confirm-text"></pre></dd><dt>Sichtbarkeit</dt><dd><select id="linkedin-confirm-visibility"><option value="PUBLIC">Öffentlich</option><option value="CONNECTIONS">Nur Kontakte</option></select></dd></dl>
+          <dl><dt>Zielkanal</dt><dd id="linkedin-confirm-channel"></dd><dt>Anzeigename</dt><dd id="linkedin-confirm-name"></dd><dt>Endgültiger Text</dt><dd><pre id="linkedin-confirm-text"></pre></dd><dt>Link</dt><dd id="linkedin-confirm-link">Kein Link</dd><dt>Sichtbarkeit</dt><dd><select id="linkedin-confirm-visibility"><option value="PUBLIC">Öffentlich</option><option value="CONNECTIONS">Nur Kontakte</option></select></dd></dl>
           <div class="button-row"><button class="button button-quiet" value="cancel">Abbrechen</button><button id="linkedin-confirm-publish" class="button button-primary" value="default">Jetzt auf LinkedIn veröffentlichen</button></div>
         </form>
       </dialog>
