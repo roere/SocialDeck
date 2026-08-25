@@ -36,7 +36,7 @@ function syncLinkedInOrganizationChannels(bool $respond=true, ?int $requestedAcc
     $scopes=linkedInScopeList($account['scopes']);$now=date('Y-m-d H:i:s');
     upsertLinkedInPersonalChannel(db(),(int)$account['id'],(string)$account['external_account_id'],(string)$account['display_name'],$scopes,$now);
     if(!hasLinkedInOrganizationDiscoveryScope($scopes)){
-        $result=['status'=>'permission_required','message'=>'Unternehmensseiten können derzeit nicht ausgelesen werden. Zusätzliche LinkedIn-Berechtigung erforderlich.','requiredProduct'=>'Community Management API','missingScopes'=>['r_organization_admin'],'reauthorizationRequired'=>true];
+        $result=['status'=>'permission_required','message'=>'Unternehmensseiten können nicht synchronisiert werden, da die erforderlichen LinkedIn-Berechtigungen fehlen.','requiredProduct'=>'Community Management API','missingScopes'=>['r_organization_admin'],'reauthorizationRequired'=>true];
         if($respond)ok($result);return $result;
     }
     if(is_string($account['token_expires_at'])&&strtotime($account['token_expires_at'])<=time())throw new OAuthException('LINKEDIN_TOKEN_EXPIRED','Die LinkedIn-Verbindung ist abgelaufen. Bitte LinkedIn erneut verbinden.',422);
