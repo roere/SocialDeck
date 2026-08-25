@@ -47,6 +47,12 @@
 
           <label for="post-link">Link <span class="muted">(optional)</span></label>
           <input id="post-link" type="url" placeholder="https://...">
+          <div id="link-article-fields" hidden>
+            <label for="post-link-title">Link-Titel</label>
+            <input id="post-link-title" type="text" maxlength="399" placeholder="Titel des verlinkten Inhalts">
+            <label for="post-link-description">Link-Beschreibung <span class="muted">(optional)</span></label>
+            <textarea id="post-link-description" rows="3" maxlength="4085" placeholder="Kurze Beschreibung des verlinkten Inhalts"></textarea>
+          </div>
 
           <section class="post-text-blocks" aria-labelledby="post-text-block-heading">
             <h3 id="post-text-block-heading">Textbaustein einfügen</h3>
@@ -59,7 +65,9 @@
             <h3 id="post-preview-heading">Vorschau</h3>
             <pre id="post-preview">Noch kein Basistext vorhanden.</pre>
             <p id="post-link-preview" class="field-hint">Link: keiner</p>
-            <p class="field-hint">LinkedIn zeigt hier nur die übermittelte URL; SocialDeck erzeugt keine künstliche Linkvorschau.</p>
+            <p id="post-link-title-preview" class="field-hint" hidden></p>
+            <p id="post-link-description-preview" class="field-hint" hidden></p>
+            <p class="field-hint">SocialDeck zeigt nur die übermittelten Artikeldaten; ohne echtes Bild-Asset wird keine Thumbnail-Vorschau erzeugt.</p>
             <p id="post-preview-error" class="form-error" role="alert"></p>
           </section>
 
@@ -216,7 +224,7 @@
       <dialog id="linkedin-publish-confirmation" class="publish-confirmation">
         <form method="dialog">
           <p class="section-kicker">Echte Veröffentlichung</p><h2>Dieser Beitrag wird jetzt tatsächlich auf LinkedIn veröffentlicht.</h2>
-          <dl><dt>Zielkanal</dt><dd id="linkedin-confirm-channel"></dd><dt>Anzeigename</dt><dd id="linkedin-confirm-name"></dd><dt>Endgültiger Text</dt><dd><pre id="linkedin-confirm-text"></pre></dd><dt>Link</dt><dd id="linkedin-confirm-link">Kein Link</dd><dt>Sichtbarkeit</dt><dd><select id="linkedin-confirm-visibility"><option value="PUBLIC">Öffentlich</option><option value="CONNECTIONS">Nur Kontakte</option></select></dd></dl>
+          <dl><dt>Zielkanal</dt><dd id="linkedin-confirm-channel"></dd><dt>Anzeigename</dt><dd id="linkedin-confirm-name"></dd><dt>Endgültiger Text</dt><dd><pre id="linkedin-confirm-text"></pre></dd><dt>Link</dt><dd id="linkedin-confirm-link">Kein Link</dd><dt>Link-Titel</dt><dd id="linkedin-confirm-link-title">-</dd><dt>Link-Beschreibung</dt><dd id="linkedin-confirm-link-description">-</dd><dt>Sichtbarkeit</dt><dd><select id="linkedin-confirm-visibility"><option value="PUBLIC">Öffentlich</option><option value="CONNECTIONS">Nur Kontakte</option></select></dd></dl>
           <div class="button-row"><button class="button button-quiet" value="cancel">Abbrechen</button><button id="linkedin-confirm-publish" class="button button-primary" value="default">Jetzt auf LinkedIn veröffentlichen</button></div>
         </form>
       </dialog>
