@@ -30,7 +30,13 @@
           <p>Beiträge zentral erstellen und auf Social-Media-Plattformen veröffentlichen.</p>
         </header>
         <section class="post-editor" aria-label="Beitragseditor">
-        <article class="panel editor-panel base-editor">
+        <nav id="editor-tabs" class="editor-tabs" aria-label="Editoransichten">
+          <button class="editor-tab active" type="button" data-editor-tab="basis" aria-selected="true">Basis</button>
+          <button class="editor-tab" type="button" data-editor-tab="linkedin" aria-selected="false">LinkedIn</button>
+          <button class="editor-tab" type="button" data-editor-tab="instagram" aria-selected="false">Instagram</button>
+          <button class="editor-tab" type="button" data-editor-tab="facebook" aria-selected="false">Facebook</button>
+        </nav>
+        <article id="base-editor-panel" class="panel editor-panel base-editor" data-editor-panel="basis">
           <div class="panel-heading">
             <div>
               <p class="section-kicker">Editor</p>
@@ -45,8 +51,9 @@
             <span id="provider-limit">Keine Plattform ausgewählt</span>
           </div>
 
-          <label for="post-link">Link <span class="muted">(optional)</span></label>
-          <input id="post-link" type="url" placeholder="https://...">
+          <label for="post-link">Hauptlink / Link-Vorschau <span class="muted">(optional)</span></label>
+          <input id="post-link" type="url" placeholder="https://..." aria-describedby="post-link-help">
+          <p id="post-link-help" class="field-hint">Dieser Link wird – sofern die Plattform es unterstützt – als hervorgehobene Link-Vorschau verwendet. Weitere Links können direkt im Beitragstext stehen.</p>
           <div id="link-article-fields" hidden>
             <label for="post-link-title">Link-Titel</label>
             <input id="post-link-title" type="text" maxlength="399" placeholder="Titel des verlinkten Inhalts">
@@ -84,8 +91,6 @@
           </div>
         </article>
 
-        </article>
-
         <section class="panel provider-panel">
             <div class="panel-heading compact">
               <div>
@@ -98,6 +103,7 @@
           </section>
 
         <section id="platform-variants" class="platform-variants" aria-label="Plattformfassungen"></section>
+        <section id="platform-tab-empty" class="panel platform-tab-empty empty-state" hidden></section>
 
         <div class="panel editor-footer">
           <div class="button-row">
