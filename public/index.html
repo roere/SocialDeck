@@ -193,6 +193,7 @@
         </form>
         <form id="password-form" class="panel settings-panel admin-tab-panel" hidden>
           <div class="panel-heading compact"><div><p class="section-kicker">Sicherheit</p><h2>Admin-Konto</h2></div></div>
+          <label class="visually-hidden" for="password-username">Benutzername</label><input id="password-username" class="visually-hidden" name="username" autocomplete="username" value="admin" readonly tabindex="-1">
           <label for="current-password">Aktuelles Passwort</label><input id="current-password" name="currentPassword" type="password" autocomplete="current-password" required>
           <label for="new-password">Neues Passwort</label><input id="new-password" name="newPassword" type="password" autocomplete="new-password" minlength="12" maxlength="1024" required>
           <label for="new-password-repeat">Neues Passwort wiederholen</label><input id="new-password-repeat" name="newPasswordRepeat" type="password" autocomplete="new-password" minlength="12" maxlength="1024" required>
