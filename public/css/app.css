@@ -63,6 +63,10 @@ textarea:focus, input:focus { border-color: var(--teal); box-shadow: 0 0 0 3px r
 .media-box { display: flex; align-items: center; gap: 14px; margin-top: 20px; padding: 16px; border: 1px dashed #b8c9c6; background: #f5faf8; border-radius: 5px; }
 .media-box p { margin: 4px 0 0; color: var(--muted); font-size: .85rem; }
 .media-icon { display: grid; width: 34px; height: 34px; place-items: center; border: 1px solid #a9c6c1; color: var(--teal); font-size: 1.4rem; }
+.media-picker { flex: 1; min-width: 0; }
+.media-picker input[type=file] { margin-top: 10px; }
+.media-preview { margin-top: 12px; padding: 12px; border: 1px solid var(--border); background: #fff; }
+.media-preview img,.media-preview video { display: block; max-width: 100%; max-height: 240px; margin: 10px 0; }
 .button-row { display: flex; flex-wrap: wrap; gap: 10px; }
 .editor-actions { margin-top: 24px; }
 .button { border: 1px solid transparent; border-radius: 5px; padding: 11px 15px; font-weight: 750; font-size: .87rem; transition: transform .15s, background .15s, border-color .15s; }

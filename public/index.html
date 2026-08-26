@@ -71,19 +71,19 @@
             <p id="post-preview-error" class="form-error" role="alert"></p>
           </section>
 
-          <div class="media-box">
+          <section class="media-box" aria-labelledby="media-heading">
             <div class="media-icon" aria-hidden="true">+</div>
-            <div>
-              <strong>Medien</strong>
-              <p>Bilder, Videos und Dokumente werden in einem späteren Schritt ergänzt.</p>
+            <div class="media-picker">
+              <strong id="media-heading">Medien hinzufügen</strong>
+              <p>Ein Bild, Video oder Dokument für LinkedIn. Die Auswahl allein startet keinen Upload.</p>
+              <input id="post-media" type="file" accept="image/jpeg,image/png,image/gif,video/mp4,application/pdf,.doc,.docx,.ppt,.pptx">
+              <div id="post-media-preview" class="media-preview" hidden><strong>Vorschau in SocialDeck</strong><div id="post-media-content"></div><button id="post-media-remove" class="button button-quiet" type="button">Entfernen</button></div>
             </div>
-          </div>
+          </section>
 
           <div class="button-row editor-actions">
             <button id="copy-button" class="button button-secondary" type="button">Basistext kopieren</button>
           </div>
-        </article>
-
         </article>
 
         <section class="panel provider-panel">
@@ -193,9 +193,9 @@
         </form>
         <form id="password-form" class="panel settings-panel admin-tab-panel" hidden>
           <div class="panel-heading compact"><div><p class="section-kicker">Sicherheit</p><h2>Admin-Konto</h2></div></div>
-          <label for="current-password">Aktuelles Passwort</label><input id="current-password" name="currentPassword" type="password" required>
-          <label for="new-password">Neues Passwort</label><input id="new-password" name="newPassword" type="password" minlength="12" maxlength="1024" required>
-          <label for="new-password-repeat">Neues Passwort wiederholen</label><input id="new-password-repeat" name="newPasswordRepeat" type="password" minlength="12" maxlength="1024" required>
+          <label for="current-password">Aktuelles Passwort</label><input id="current-password" name="currentPassword" type="password" autocomplete="current-password" required>
+          <label for="new-password">Neues Passwort</label><input id="new-password" name="newPassword" type="password" autocomplete="new-password" minlength="12" maxlength="1024" required>
+          <label for="new-password-repeat">Neues Passwort wiederholen</label><input id="new-password-repeat" name="newPasswordRepeat" type="password" autocomplete="new-password" minlength="12" maxlength="1024" required>
           <div class="button-row"><button class="button button-primary" type="submit">Passwort ändern</button></div>
         </form>
       </section>
@@ -224,7 +224,7 @@
       <dialog id="linkedin-publish-confirmation" class="publish-confirmation">
         <form method="dialog">
           <p class="section-kicker">Echte Veröffentlichung</p><h2>Dieser Beitrag wird jetzt tatsächlich auf LinkedIn veröffentlicht.</h2>
-          <dl><dt>Zielkanal</dt><dd id="linkedin-confirm-channel"></dd><dt>Anzeigename</dt><dd id="linkedin-confirm-name"></dd><dt>Endgültiger Text</dt><dd><pre id="linkedin-confirm-text"></pre></dd><dt>Link</dt><dd id="linkedin-confirm-link">Kein Link</dd><dt>Link-Titel</dt><dd id="linkedin-confirm-link-title">-</dd><dt>Link-Beschreibung</dt><dd id="linkedin-confirm-link-description">-</dd><dt>Sichtbarkeit</dt><dd><select id="linkedin-confirm-visibility"><option value="PUBLIC">Öffentlich</option><option value="CONNECTIONS">Nur Kontakte</option></select></dd></dl>
+          <dl><dt>Zielkanal</dt><dd id="linkedin-confirm-channel"></dd><dt>Anzeigename</dt><dd id="linkedin-confirm-name"></dd><dt>Endgültiger Text</dt><dd><pre id="linkedin-confirm-text"></pre></dd><dt>Medium</dt><dd id="linkedin-confirm-media">Kein Medium</dd><dt>Link</dt><dd id="linkedin-confirm-link">Kein Link</dd><dt>Link-Titel</dt><dd id="linkedin-confirm-link-title">-</dd><dt>Link-Beschreibung</dt><dd id="linkedin-confirm-link-description">-</dd><dt>Sichtbarkeit</dt><dd><select id="linkedin-confirm-visibility"><option value="PUBLIC">Öffentlich</option><option value="CONNECTIONS">Nur Kontakte</option></select></dd></dl>
           <div class="button-row"><button class="button button-quiet" value="cancel">Abbrechen</button><button id="linkedin-confirm-publish" class="button button-primary" value="default">Jetzt auf LinkedIn veröffentlichen</button></div>
         </form>
       </dialog>

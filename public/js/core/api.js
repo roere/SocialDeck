@@ -1,5 +1,6 @@
 async function request(path, options = {}) {
-  const response = await fetch(`/api${path}`, { credentials: "same-origin", headers: { "Content-Type": "application/json", ...(options.headers || {}) }, ...options });
+  const headers={...(options.headers||{})};if(!(options.body instanceof FormData))headers["Content-Type"]="application/json";
+  const response = await fetch(`/api${path}`, { credentials: "same-origin", ...options, headers });
   const body = await response.json().catch(() => ({ ok: false, error: { message: "Ungültige Serverantwort." } }));
   if (!response.ok || !body.ok) { const error = new Error(body.error?.message || "Anfrage fehlgeschlagen."); error.status = response.status; throw error; }
   return body.data;
@@ -28,5 +29,5 @@ export const api = {
   startLinkedIn(csrfToken) { return request("/oauth/linkedin/start", { headers: { Accept: "application/json", "X-CSRF-Token": csrfToken } }); },
   syncLinkedInChannels(csrfToken) { return request("/admin/providers/linkedin/channels/sync", { method: "POST", headers: { "X-CSRF-Token": csrfToken } }); },
   disconnectLinkedIn(accountId, csrfToken) { return request("/oauth/linkedin/disconnect", { method: "POST", headers: { "X-CSRF-Token": csrfToken }, body: JSON.stringify({ accountId }) }); },
-  publishLinkedInTestPost(values, csrfToken) { return request("/admin/linkedin/test-post", { method: "POST", headers: { "X-CSRF-Token": csrfToken }, body: JSON.stringify(values) }); }
+  publishLinkedInTestPost(values, csrfToken) { if(values.media instanceof File){const body=new FormData();for(const[key,value]of Object.entries(values))if(key!=="media")body.append(key,String(value));body.append("media",values.media,values.media.name);return request("/admin/linkedin/test-post",{method:"POST",headers:{"X-CSRF-Token":csrfToken},body});}return request("/admin/linkedin/test-post", { method: "POST", headers: { "X-CSRF-Token": csrfToken }, body: JSON.stringify(values) }); }
 };

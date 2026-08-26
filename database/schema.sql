@@ -122,6 +122,31 @@ SET @has_post_fk = (SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS WH
 SET @sql = IF(@has_post_fk=0,'ALTER TABLE publishing_attempts ADD CONSTRAINT fk_publishing_attempt_post FOREIGN KEY (post_id) REFERENCES posts(id)','SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
+CREATE TABLE IF NOT EXISTS media_assets (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  post_id BIGINT UNSIGNED NULL,
+  provider_id VARCHAR(50) NOT NULL,
+  social_account_id BIGINT UNSIGNED NOT NULL,
+  channel_id BIGINT UNSIGNED NULL,
+  media_type ENUM('image','video','document') NOT NULL,
+  original_filename VARCHAR(255) NOT NULL,
+  mime_type VARCHAR(127) NOT NULL,
+  file_size BIGINT UNSIGNED NOT NULL,
+  storage_key VARCHAR(255) NOT NULL,
+  external_media_id VARCHAR(500) NULL,
+  upload_status ENUM('stored','initializing','uploading','uploaded','failed') NOT NULL DEFAULT 'stored',
+  processing_status ENUM('pending','processing','available','failed') NOT NULL DEFAULT 'pending',
+  error_code VARCHAR(100) NULL,
+  error_message VARCHAR(500) NULL,
+  created_at DATETIME NOT NULL,
+  updated_at DATETIME NOT NULL,
+  CONSTRAINT fk_media_assets_post FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE SET NULL,
+  CONSTRAINT fk_media_assets_account FOREIGN KEY (social_account_id) REFERENCES social_accounts(id),
+  CONSTRAINT fk_media_assets_channel FOREIGN KEY (channel_id) REFERENCES social_channels(id),
+  UNIQUE KEY uq_media_assets_storage_key (storage_key),
+  KEY ix_media_assets_post (post_id), KEY ix_media_assets_status (provider_id,upload_status,processing_status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS legal_settings (
   id TINYINT UNSIGNED PRIMARY KEY,
   imprint MEDIUMTEXT NOT NULL,

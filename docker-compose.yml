@@ -39,6 +39,7 @@ services:
       - ./scripts:/var/www/app/scripts:ro
       - ./database:/var/www/app/database:ro
       - ./tests:/var/www/app/tests:ro
+      - media_uploads:/var/lib/socialdeck/media
     healthcheck:
       test: ["CMD-SHELL", "php-fpm -t >/dev/null 2>&1 && kill -0 1"]
       interval: 10s
@@ -65,3 +66,4 @@ services:
 
 volumes:
   mariadb_data:
+  media_uploads:
