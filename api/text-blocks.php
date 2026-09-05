@@ -32,8 +32,7 @@ function listActiveTextBlocks(): never {
 function resolvePostText(): never {
     $text=requireStringField(input(),'text',50000,false);
     try{
-        textBlockReferenceKeys($text);$rows=textBlockRowsByKey(db());
-        $resolved=(string)preg_replace_callback('/{{\s*([A-Za-z0-9][A-Za-z0-9_-]*)\s*}}/',fn(array $match)=>resolveTextBlockFromRows($match[1],$rows),$text);
+        $resolved=resolveTextWithBlocks($text,textBlockRowsByKey(db()));
         ok(['text'=>$resolved]);
     }catch(TextBlockResolutionException $exception){fail($exception->errorCode,$exception->getMessage(),422);}
 }
@@ -55,4 +54,10 @@ function updateTextBlock(int $id): never {
 
 function deleteTextBlock(int $id): never {
     requireAdmin();requireCsrf();$find=db()->prepare('SELECT block_key,is_system FROM text_blocks WHERE id=?');$find->execute([$id]);$block=$find->fetch();if(!$block)fail('NOT_FOUND','Textbaustein nicht gefunden.',404);if((bool)$block['is_system'])fail('SYSTEM_BLOCK_REQUIRED','System-Textbausteine können nicht gelöscht werden.',409);$references=referencingTextBlocks($block['block_key'],$id);if($references)fail('TEXT_BLOCK_REFERENCED','Der Textbaustein kann nicht gelöscht werden, weil er von „'.implode('“, „',$references).'“ verwendet wird.',409);$stmt=db()->prepare('DELETE FROM text_blocks WHERE id=?');$stmt->execute([$id]);ok(['deleted'=>true,'id'=>$id]);
+}
+
+// Shared by post preview and campaign approval snapshots.
+function resolveTextWithBlocks(string $text,array $rows): string {
+    textBlockReferenceKeys($text);
+    return (string)preg_replace_callback('/{{\s*([A-Za-z0-9][A-Za-z0-9_-]*)\s*}}/',fn(array $match)=>resolveTextBlockFromRows($match[1],$rows),$text);
 }

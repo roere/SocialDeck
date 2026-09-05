@@ -12,6 +12,7 @@
       <nav class="main-nav" aria-label="Hauptnavigation">
         <a href="#/" data-route-link="home">Start</a>
         <a href="#/beitraege" data-route-link="posts" hidden>Beiträge</a>
+        <a href="#/kampagne" data-route-link="campaign" hidden>Kampagne</a>
         <a href="#/admin" data-route-link="admin" hidden>Admin</a>
       </nav>
       <div class="session-nav">
@@ -22,6 +23,8 @@
     </header>
     <main class="app-shell">
       <div id="message" class="message" role="status" aria-live="polite"></div>
+
+      <section id="campaign-view" data-view="campaign" hidden><header class="page-header"><h1>Kampagne</h1><p>Relevante Beiträge auswählen und individuelle Antworten vorbereiten.</p></header><div id="campaign-root"></div></section>
 
       <section id="home-view" data-view="home">
         <header class="page-header">
@@ -97,16 +100,45 @@
             <div id="provider-list" class="provider-list"></div>
           </section>
 
+        <div class="panel editor-footer draft-actions-row" data-layout-block="draft-actions-before">
+          <div class="button-row">
+            <button id="save-button" class="button button-secondary" type="button" data-draft-action="save">Entwurf speichern</button>
+            <button id="delete-button" class="button button-quiet" type="button" data-draft-action="delete">Entwurf löschen</button>
+          </div>
+        </div>
+
         <section id="platform-variants" class="platform-variants" aria-label="Plattformfassungen"></section>
 
-        <div class="panel editor-footer">
+        <div class="panel editor-footer draft-actions-row" data-layout-block="draft-actions-after">
           <div class="button-row">
-            <button id="save-button" class="button button-secondary" type="button">Entwurf speichern</button>
-            <button id="delete-button" class="button button-quiet" type="button">Entwurf löschen</button>
+            <button class="button button-secondary" type="button" data-draft-action="save">Entwurf speichern</button>
+            <button class="button button-quiet" type="button" data-draft-action="delete">Entwurf löschen</button>
           </div>
-          <span id="draft-status" class="muted"></span>
         </div>
+        <span id="draft-status" class="visually-hidden" aria-live="polite"></span>
         </section>
+
+        <section class="panel publish-bar" data-layout-block="publishing">
+          <div class="publishing-row publishing-status-row"><strong>Status</strong><div id="publish-results" class="results-list empty-state">Noch keine Veröffentlichung durchgeführt.</div></div>
+          <div class="publishing-row"><label for="publish-mode">Modus</label><select id="publish-mode"><option value="mock" selected>Testmodus – nicht veröffentlichen</option><option value="linkedin-live">Echter LinkedIn-Test</option></select></div>
+          <p id="publish-mode-hint" class="muted">Es wird kein Beitrag an LinkedIn, Instagram oder Facebook gesendet.</p>
+          <button id="publish-button" class="button button-primary" type="button">Veröffentlichen</button>
+        </section>
+
+        <div hidden aria-hidden="true"><button id="clear-history-button" type="button"></button><div id="history-list"></div></div>
+
+        <dialog id="platform-variant-dialog" class="platform-variant-dialog" aria-labelledby="platform-variant-dialog-title">
+          <div class="platform-variant-dialog-shell">
+            <header class="platform-variant-dialog-header">
+              <div><p class="section-kicker">Plattformfassung</p><h2 id="platform-variant-dialog-title"></h2></div>
+              <div class="button-row">
+                <button id="platform-variant-minimize" class="icon-button" type="button" aria-label="Plattformfassung verkleinern" title="Verkleinern">↙</button>
+                <button id="platform-variant-close" class="icon-button" type="button" aria-label="Plattformfassung schließen" title="Schließen">×</button>
+              </div>
+            </header>
+            <div id="platform-variant-dialog-content" class="platform-variant-dialog-content"></div>
+          </div>
+        </dialog>
       </section>
 
       <section id="posts-view" class="standalone-view" data-view="posts" hidden>
@@ -211,17 +243,6 @@
         <div id="privacy-content" class="legal-content"></div>
       </section>
 
-      <section class="publish-bar panel" data-view="home">
-        <div>
-          <p class="section-kicker">Bereit für den nächsten Schritt?</p>
-          <h2>Veröffentlichungsmodus</h2>
-          <label for="publish-mode">Modus</label>
-          <select id="publish-mode"><option value="mock" selected>Testmodus – nicht veröffentlichen</option><option value="linkedin-live">Echter LinkedIn-Test</option></select>
-          <p id="publish-mode-hint" class="muted">Es wird kein Beitrag an LinkedIn, Instagram oder Facebook gesendet.</p>
-        </div>
-        <button id="publish-button" class="button button-primary" type="button">Testversand starten</button>
-      </section>
-
       <dialog id="linkedin-publish-confirmation" class="publish-confirmation">
         <form method="dialog">
           <p class="section-kicker">Echte Veröffentlichung</p><h2>Dieser Beitrag wird jetzt tatsächlich auf LinkedIn veröffentlicht.</h2>
@@ -230,26 +251,6 @@
         </form>
       </dialog>
 
-      <section class="panel results-panel" data-view="home">
-        <div class="panel-heading compact">
-          <div>
-            <p class="section-kicker">Aktivität</p>
-            <h2>Veröffentlichungsstatus</h2>
-          </div>
-        </div>
-        <div id="publish-results" class="results-list empty-state">Noch keine Veröffentlichung durchgeführt.</div>
-      </section>
-
-      <section class="panel history-panel" data-view="home">
-        <div class="panel-heading compact">
-          <div>
-            <p class="section-kicker">Lokal gespeichert</p>
-            <h2>Veröffentlichungsverlauf</h2>
-          </div>
-          <button id="clear-history-button" class="button button-quiet" type="button">Verlauf löschen</button>
-        </div>
-        <div id="history-list" class="history-list empty-state">Noch keine Einträge vorhanden.</div>
-      </section>
     </main>
     <footer class="site-footer"><div><a href="#/impressum">Impressum</a><a href="#/datenschutz">Datenschutz</a></div><span>© <span id="current-year"></span> Social Post</span></footer>
     <script type="module" src="js/app.js?v=central-post-editor"></script>

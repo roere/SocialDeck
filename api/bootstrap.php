@@ -10,11 +10,12 @@ require_once __DIR__.'/linkedin-posts.php';
 require_once __DIR__.'/text-block-placeholders.php';
 require_once __DIR__.'/text-blocks.php';
 require_once __DIR__.'/email-settings.php';
+require_once __DIR__.'/campaign/routes.php';
 function db(): PDO { static $pdo; if($pdo instanceof PDO)return $pdo; $dsn=sprintf('mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4',envValue('DB_HOST','db'),envValue('DB_PORT','3306'),envValue('DB_NAME','social_deck')); return $pdo=new PDO($dsn,envValue('DB_USER','social_deck'),envValue('DB_PASSWORD',''),[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_EMULATE_PREPARES=>false,PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC]); }
 function jsonResponse(array $body,int $status=200,array $headers=[]): never { http_response_code($status); header('Content-Type: application/json; charset=utf-8'); foreach($headers as $name=>$value)header($name.': '.$value); echo json_encode($body,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES); exit; }
 function ok(array $data=[],int $status=200): never { jsonResponse(['ok'=>true,'data'=>$data],$status); }
 function fail(string $code,string $message,int $status,array $headers=[]): never { jsonResponse(['ok'=>false,'error'=>['code'=>$code,'message'=>$message]],$status,$headers); }
-function input(): array { $raw=file_get_contents('php://input'); if($raw===false||trim($raw)==='')return []; try{$decoded=json_decode($raw,true,64,JSON_THROW_ON_ERROR);}catch(JsonException){fail('INVALID_JSON','Ungültiges JSON.',400);} if(!is_array($decoded)||array_is_list($decoded))fail('INVALID_JSON','Ein JSON-Objekt wird erwartet.',400); return $decoded; }
+function input(): array { $raw=file_get_contents('php://input'); if($raw===false||trim($raw)==='')return []; try{$decoded=json_decode($raw,true,64,JSON_THROW_ON_ERROR);}catch(JsonException){fail('INVALID_JSON','Ungültiges JSON.',400);} if(!is_array($decoded)||!str_starts_with(ltrim($raw),'{'))fail('INVALID_JSON','Ein JSON-Objekt wird erwartet.',400); return $decoded; }
 function requestScheme(): string { if(($_SERVER['HTTPS']??'')==='on')return 'https';return strtolower((string)($_SERVER['HTTP_X_FORWARDED_PROTO']??''))==='https'?'https':'http'; }
 function cookieParams(): array { return ['lifetime'=>0,'path'=>'/','domain'=>'','secure'=>envValue('APP_ENV','local')==='production','httponly'=>true,'samesite'=>'Lax']; }
 function startAppSession(): void { ini_set('session.use_only_cookies','1'); ini_set('session.use_strict_mode','1'); ini_set('session.use_trans_sid','0'); session_name('SOCIALPOSTSESSID'); session_set_cookie_params(cookieParams()); session_start(); }

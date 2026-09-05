@@ -1,4 +1,4 @@
-async function request(path, options = {}) {
+export async function request(path, options = {}) {
   const headers={...(options.headers||{})};if(!(options.body instanceof FormData))headers["Content-Type"]="application/json";
   const response = await fetch(`/api${path}`, { credentials: "same-origin", ...options, headers });
   const body = await response.json().catch(() => ({ ok: false, error: { message: "Ungültige Serverantwort." } }));

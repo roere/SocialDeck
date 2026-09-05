@@ -20,6 +20,8 @@ services:
     build: ./web
     restart: unless-stopped
     environment:
+      CAMPAIGN_WARNING_TARGETS: ${CAMPAIGN_WARNING_TARGETS:-5}
+      CAMPAIGN_STRONG_WARNING_TARGETS: ${CAMPAIGN_STRONG_WARNING_TARGETS:-10}
       APP_ENV: ${APP_ENV:-local}
       APP_ENCRYPTION_KEY: ${APP_ENCRYPTION_KEY}
       DB_HOST: ${DB_HOST:-db}

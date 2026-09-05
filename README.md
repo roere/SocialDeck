@@ -140,3 +140,9 @@ Das System ist derzeit bewusst Single-System/Single-Admin-orientiert; es wurde k
 - echtes Publishing
 - Medien-Uploads
 - produktive Bereitstellung
+
+## Kampagnen
+
+Der Hauptreiter **Kampagne** sammelt relevante Beiträge und bereitet individuelle Antworten vor. Speichern erfolgt in der Datenbank; direkte Kommentare benötigen eine gesonderte Abschlussfreigabe und tatsächlich gewährte Providerberechtigungen. Ohne API-Zugriff stehen manuelle Erfassung, Kopieren und Original-Links bereit.
+
+Für bestehende Datenbanken ist Migration `011-campaigns.sql` erforderlich. Details zu Datenquellen, API-Grenzen, Architektur, Warnschwellen und Tests stehen im [Kampagnenbericht](docs/campaigns.md). Es gibt keine allgemeine Netzwerkfeed-Discovery und keine automatische Kommentierung.
