@@ -39,7 +39,7 @@ export function availableTextBlockReferences(blocks, currentId = null) {
   return blocks.filter((block) => block.isActive && block.id !== currentId);
 }
 
-export function createTextBlockReferenceButton(block, onInsert) {
+export function createTextBlockReferenceButton(block, onInsert, presentation = "reference") {
   const button = document.createElement("button");
   const syntax = document.createElement("span");
   const title = document.createElement("small");
@@ -55,6 +55,12 @@ export function createTextBlockReferenceButton(block, onInsert) {
     badge.className = "text-block-system-label";
     badge.textContent = "System";
     button.append(badge);
+  }
+  if (presentation === "post") {
+    button.className = "post-text-block";
+    const heading = document.createElement("strong"), category = document.createElement("small");
+    heading.textContent = block.title; category.textContent = block.category || "Ohne Kategorie";
+    button.replaceChildren(heading, syntax, category);
   }
   button.addEventListener("click", () => onInsert(block.key));
   return button;
