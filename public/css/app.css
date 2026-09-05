@@ -287,3 +287,8 @@ textarea:focus, input:focus, .campaign-filters select:focus, .campaign-manual se
   .campaign-filters > label { flex-basis: 130px; }
   .campaign-shell .variant-head-actions { flex-wrap: wrap; }
 }
+
+.linkedin-oauth-result ul { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.linkedin-oauth-result li { padding: 5px 9px; border: 1px solid var(--line); border-radius: 5px; overflow-wrap: anywhere; }
+.linkedin-oauth-result p { margin: 6px 0; }
+.linkedin-oauth-result a { color: var(--teal-dark); }

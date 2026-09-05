@@ -1,3 +1,4 @@
+import {linkedinOAuthResultTests} from "./linkedin-oauth-result-tests.js";
 import {campaignLayoutTests} from "./campaign-layout-tests.js";
 import {campaignTests} from "./campaign-tests.js";
 import { createProviderRegistry } from "../js/core/providerRegistry.js";
@@ -18,6 +19,7 @@ async function test(name, assertion) { try { await assertion(); results.push(`PA
 const registry = createProviderRegistry(); [linkedinProvider, instagramProvider, facebookProvider].forEach((provider) => registry.register(provider));
 const tests = [
     ...campaignTests,
+    ...linkedinOAuthResultTests,
     ...campaignLayoutTests,
 	["LinkedIn registriert und gefunden", () => { if (registry.get("linkedin") !== linkedinProvider) throw new Error("Provider fehlt"); }],
 	["Unbekannter Provider wird nicht gefunden", () => { if (registry.get("unknown")) throw new Error("Provider unerwartet gefunden"); }],

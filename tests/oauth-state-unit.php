@@ -12,3 +12,16 @@ $_SESSION=['linkedin_oauth_states'=>[]];for($i=0;$i<8;$i++)$_SESSION['linkedin_o
 if(linkedInAuthorizationError('access_denied','The user denied access')!=='OAUTH_DENIED')throw new RuntimeException('Benutzerablehnung falsch klassifiziert');echo "PASS LinkedIn-Benutzerablehnung klassifiziert\n";
 foreach(['unauthorized_scope_error','invalid_scope'] as $error)if(linkedInAuthorizationError($error,'Requested permission is unavailable')!=='LINKEDIN_SCOPE_DENIED')throw new RuntimeException('Scope-Ablehnung falsch klassifiziert');echo "PASS LinkedIn-Scope-Ablehnung klassifiziert\n";
 if(linkedInAuthorizationError('server_error','Temporary failure')!=='LINKEDIN_AUTHORIZATION')throw new RuntimeException('OAuth-Providerfehler falsch klassifiziert');echo "PASS LinkedIn-Providerfehler klassifiziert\n";
+
+$snapshot=['created_at'=>time(),'requestedScopes'=>['openid','profile','w_member_social_feed'],'existingConnection'=>true];
+$_SESSION=['linkedin_oauth_states'=>[hash('sha256','snapshot-a')=>$snapshot,hash('sha256','snapshot-b')=>['created_at'=>time(),'requestedScopes'=>['openid','profile']]]];
+$context=consumeLinkedInState('snapshot-a');if($context!==$snapshot)throw new RuntimeException('Scope snapshot lost');echo "PASS Scope-Snapshot bleibt pro OAuth-Versuch erhalten\n";
+$other=consumeLinkedInState('snapshot-b');if($other['requestedScopes']!==['openid','profile'])throw new RuntimeException('Parallel snapshots mixed');echo "PASS parallele Scope-Snapshots isoliert\n";
+if(linkedInAuthorizationError('access_denied','scope permission cancelled')!=='OAUTH_DENIED')throw new RuntimeException('Cancel misdiagnosed');echo "PASS Abbruch ist keine Scope-Diagnose\n";
+if(linkedInAuthorizationError('server_error','r_member_social_feed token=private')!=='LINKEDIN_AUTHORIZATION')throw new RuntimeException('Raw description inferred a scope');echo "PASS keine Einzel-Scope-Diagnose aus Freitext\n";
+$log=tempnam(sys_get_temp_dir(),'oauth-log-');$previous=ini_get('error_log');ini_set('error_log',$log);
+linkedInOAuthDiagnostic('start','SECRET_STATE',$snapshot,'stored');
+$result=linkedInRecordOAuthResult($snapshot,'failed','LINKEDIN_SCOPE_DENIED');
+$contents=file_get_contents($log);ini_set('error_log',$previous);unlink($log);
+if(str_contains($contents,'SECRET_STATE')||str_contains($contents,'sessionHash')||!str_contains($contents,'requestedScopes')||!str_contains($contents,'w_member_social_feed'))throw new RuntimeException('Unsafe diagnostics');echo "PASS OAuth-Logs enthalten Scopes ohne State oder Sessiondaten\n";
+if($result['requestedScopes']!==$snapshot['requestedScopes']||$result['oauthErrorCategory']!=='scope'||!$result['existingConnection'])throw new RuntimeException('Invalid safe outcome');echo "PASS sicheres OAuth-Ergebnis für Admin\n";
