@@ -7,6 +7,8 @@ export async function request(path, options = {}) {
 }
 
 export const api = {
+  saveProviderApp(provider,id,values,csrfToken){return request(`/admin/providers/${provider}/apps${id?'/'+id:''}`,{method:id?'PUT':'POST',headers:{'X-CSRF-Token':csrfToken},body:JSON.stringify(values)});},
+  providerAppAction(provider,id,action,csrfToken,values={}){return request(`/admin/providers/${provider}/apps/${id}${action?'/'+action:''}`,{method:action?'POST':'DELETE',headers:{Accept:'application/json','X-CSRF-Token':csrfToken},body:JSON.stringify(values)});},
   csrf() { return request("/auth/csrf"); },
   login(login, password, csrfToken) { return request("/auth/login", { method: "POST", headers: { "X-CSRF-Token": csrfToken }, body: JSON.stringify({ login, password }) }); },
   logout(csrfToken) { return request("/auth/logout", { method: "POST", headers: { "X-CSRF-Token": csrfToken } }); },

@@ -15,15 +15,15 @@ function linkedInOAuthCategory(string $code): string {
     return 'authorization';
 }
 function linkedInRecordOAuthResult(?array $context,string $result,?string $errorCode=null,array $granted=[]): array {
-    $entry=['result'=>$result,'requestedScopes'=>linkedInSafeScopeNames($context['requestedScopes']??[]),
+    $entry=['providerAppId'=>$context['provider_app_id']??null,'appName'=>$context['appName']??null,'result'=>$result,'requestedScopes'=>linkedInSafeScopeNames($context['requestedScopes']??[]),
         'scopeSnapshotAvailable'=>isset($context['requestedScopes']),
         'oauthError'=>$errorCode,'oauthErrorCategory'=>$errorCode?linkedInOAuthCategory($errorCode):null,
         'grantedScopes'=>linkedInSafeScopeNames($granted),'existingConnection'=>(bool)($context['existingConnection']??false),'createdAt'=>time()];
-    $_SESSION['linkedin_oauth_result']=$entry;
+    $_SESSION['linkedin_oauth_result']=$entry;if(isset($context['provider_app_id']))$_SESSION['linkedin_oauth_app_results'][$context['provider_app_id']]=$entry;
     error_log('SocialPost LinkedIn OAuth '.json_encode(['phase'=>$result==='success'?'complete':($entry['oauthErrorCategory']??'authorization'),'requestedScopes'=>$entry['requestedScopes'],'oauthError'=>$errorCode,'oauthErrorCategory'=>$entry['oauthErrorCategory'],'grantedScopes'=>$entry['grantedScopes']],JSON_UNESCAPED_SLASHES));
     return $entry;
 }
-function linkedInLastOAuthResult(): ?array {
-    $entry=$_SESSION['linkedin_oauth_result']??null;
+function linkedInLastOAuthResult(?int $appId=null): ?array {
+    $entry=$appId===null?($_SESSION['linkedin_oauth_result']??null):($_SESSION['linkedin_oauth_app_results'][$appId]??null);
     return is_array($entry)&&($entry['createdAt']??0)>=time()-3600?$entry:null;
 }

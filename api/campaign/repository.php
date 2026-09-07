@@ -6,12 +6,12 @@ function campaignLoad(int $id,int $user): array {
     if(!$c)throw new CampaignException('NOT_FOUND','Kampagne nicht gefunden.',404);
     $c['id']=(int)$c['id'];$c['revision']=(int)$c['revision'];$c['platforms']=json_decode($c['platform_settings_json'],true);
     $c['targets']=campaignQuery('SELECT t.*,e.post_excerpt,e.external_post_url,e.published_at post_published_at FROM campaign_targets t JOIN engagement_items e ON e.id=t.engagement_item_id WHERE t.campaign_id=? ORDER BY t.id',[$id])->fetchAll();
-    foreach($c['targets'] as &$t){$t['id']=(int)$t['id'];$t['engagement_item_id']=(int)$t['engagement_item_id'];$t['enabled']=(bool)$t['enabled'];$t['reply_is_customized']=(bool)$t['reply_is_customized'];$t['publishable']=campaignPublishable($t);}
+    foreach($c['targets'] as &$t){$t['id']=(int)$t['id'];$t['engagement_item_id']=(int)$t['engagement_item_id'];$t['enabled']=(bool)$t['enabled'];$t['reply_is_customized']=(bool)$t['reply_is_customized'];$t['publishable']=campaignPublishable($t);$selected=campaignAccount($t['social_account_id']?(int)$t['social_account_id']:null,$t['provider_id']);$t['app_name']=$selected['app_name']??null;}
     unset($t,$c['review_json'],$c['review_token_hash'],$c['review_expires_at'],$c['platform_settings_json']);return $c;
 }
 function campaignAccount(?int $id,string $provider): ?array {
     if(!$id)return null;
-    return campaignQuery('SELECT a.* FROM social_accounts a JOIN provider_configs p ON p.provider_id=a.provider_id AND p.enabled=1 WHERE a.id=? AND a.provider_id=?',[$id,$provider])->fetch()?:null;
+    return campaignQuery('SELECT a.*,p.name app_name FROM social_accounts a JOIN provider_apps p ON p.id=a.provider_app_id AND p.provider_id=a.provider_id AND p.enabled=1 WHERE a.id=? AND a.provider_id=?',[$id,$provider])->fetch()?:null;
 }
 function campaignPublishable(array $t): bool {
     $adapter=campaignProvider($t['provider_id']);$account=campaignAccount(isset($t['social_account_id'])?(int)$t['social_account_id']:null,$t['provider_id']);
@@ -36,8 +36,9 @@ function campaignSave(array $data,int $user,?int $id): array {
             $itemId=$incoming['engagement_item_id'];if(isset($keep[$itemId]))throw new CampaignException('DUPLICATE','Ein Beitrag darf nur einmal ausgewählt werden.');$keep[$itemId]=true;
             $item=campaignQuery('SELECT * FROM engagement_items WHERE id=? AND created_by=?',[$itemId,$user])->fetch();if(!$item)throw new CampaignException('ITEM','Beitrag nicht gefunden.',404);
             $old=$byItem[$itemId]??null;if($old&&$old['status']==='published')continue;
+            if($item['provider_id']==='linkedin'){$selected=providerCapabilityAccount('linkedin','comments');$item['social_account_id']=$selected['id']??$item['social_account_id'];}
             $reply=campaignMergeReply($base,$incoming,$old);$enabled=$incoming['enabled'];$status=$old&&$old['status']==='failed'?'failed':(!$enabled||!$platforms[$item['provider_id']]?'disabled':(trim($reply['reply_text'])!==''?'ready':'draft'));
-            campaignQuery('INSERT INTO campaign_targets(campaign_id,engagement_item_id,provider_id,social_account_id,external_post_id,external_post_urn,author_display_name,enabled,reply_text,reply_is_customized,status) VALUES(?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE enabled=VALUES(enabled),reply_text=VALUES(reply_text),reply_is_customized=VALUES(reply_is_customized),status=VALUES(status),updated_at=CURRENT_TIMESTAMP',[$id,$itemId,$item['provider_id'],$item['social_account_id'],$item['external_post_id'],$item['external_post_urn'],$item['author_display_name'],(int)$enabled,$reply['reply_text'],(int)$reply['reply_is_customized'],$status]);
+            campaignQuery('INSERT INTO campaign_targets(campaign_id,engagement_item_id,provider_id,social_account_id,external_post_id,external_post_urn,author_display_name,enabled,reply_text,reply_is_customized,status) VALUES(?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE social_account_id=VALUES(social_account_id),enabled=VALUES(enabled),reply_text=VALUES(reply_text),reply_is_customized=VALUES(reply_is_customized),status=VALUES(status),updated_at=CURRENT_TIMESTAMP',[$id,$itemId,$item['provider_id'],$item['social_account_id'],$item['external_post_id'],$item['external_post_urn'],$item['author_display_name'],(int)$enabled,$reply['reply_text'],(int)$reply['reply_is_customized'],$status]);
         }
         foreach($byItem as $itemId=>$old)if(!isset($keep[$itemId])){
             if(in_array($old['status'],['published','publishing'],true))throw new CampaignException('PUBLISHED','Bereits veröffentlichte Ziele bleiben als Nachweis erhalten.');

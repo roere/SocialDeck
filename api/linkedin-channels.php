@@ -30,8 +30,9 @@ function linkedInOrganizationId(string $urn): ?string {
 
 function syncLinkedInOrganizationChannels(bool $respond=true, ?int $requestedAccountId=null): ?array {
     if($respond){requireAdmin();requireCsrf();}
-    $sql="SELECT id,external_account_id,display_name,access_token_encrypted,token_expires_at,scopes,status FROM social_accounts WHERE provider_id='linkedin' AND status='connected'";
-    $params=[];if($requestedAccountId!==null){$sql.=' AND id=?';$params[]=$requestedAccountId;}$sql.=' ORDER BY id DESC LIMIT 1';$statement=db()->prepare($sql);$statement->execute($params);$account=$statement->fetch();
+    $selected=$requestedAccountId===null?providerCapabilityAccount('linkedin','organizationDiscovery'):null;if($selected)$requestedAccountId=(int)$selected['id'];
+    $sql="SELECT a.id,a.external_account_id,a.display_name,a.access_token_encrypted,a.token_expires_at,a.scopes,a.status FROM social_accounts a JOIN provider_apps p ON p.id=a.provider_app_id AND p.enabled=1 WHERE a.provider_id='linkedin' AND a.status='connected'";
+    $params=[];if($requestedAccountId!==null){$sql.=' AND a.id=?';$params[]=$requestedAccountId;}$sql.=' ORDER BY p.id,a.id LIMIT 1';$statement=db()->prepare($sql);$statement->execute($params);$account=$statement->fetch();
     if(!$account){if($respond)fail('LINKEDIN_NOT_CONNECTED','Kein verbundenes LinkedIn-Konto vorhanden.',422);return null;}
     $scopes=linkedInScopeList($account['scopes']);$now=date('Y-m-d H:i:s');
     upsertLinkedInPersonalChannel(db(),(int)$account['id'],(string)$account['external_account_id'],(string)$account['display_name'],$scopes,$now);

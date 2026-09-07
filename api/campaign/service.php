@@ -40,6 +40,6 @@ function campaignUpdateStatus(int $id,int $user): void {
     $c=campaignLoad($id,$user);campaignQuery('UPDATE campaigns SET status=?,updated_at=CURRENT_TIMESTAMP WHERE id=?',[campaignStatus($c['targets'],$c['platforms']),$id]);
 }
 function campaignCapabilities(): array {
-    $accounts=campaignQuery('SELECT a.id,a.provider_id,a.display_name,a.status,a.token_expires_at,a.scopes,p.enabled FROM social_accounts a LEFT JOIN provider_configs p ON p.provider_id=a.provider_id ORDER BY a.id')->fetchAll();
+    $accounts=campaignQuery('SELECT a.id,a.provider_id,a.display_name,a.status,a.token_expires_at,a.scopes,a.provider_app_id,p.name app_name,p.enabled FROM social_accounts a JOIN provider_apps p ON p.id=a.provider_app_id ORDER BY a.id')->fetchAll();
     foreach($accounts as &$a){$a['id']=(int)$a['id'];$adapter=campaignProvider($a['provider_id']);$a['capabilities']=$adapter&&$a['enabled']?$adapter->capabilities($a):['read'=>false,'write'=>false,'postRead'=>false];unset($a['scopes']);}return $accounts;
 }

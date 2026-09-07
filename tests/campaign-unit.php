@@ -31,7 +31,7 @@ checkCampaign(campaignMergeReply('Neue Basis',['reply_is_customized'=>false],nul
 $pdo=db();$uid=null;$aid=null;
 try{
  campaignQuery("INSERT INTO users(username,email,password_hash,role,created_at,updated_at) VALUES('campaign-tests','campaign-tests@example.test','unused','user',NOW(),NOW())");$uid=(int)$pdo->lastInsertId();
- campaignQuery("INSERT INTO social_accounts(provider_id,external_account_id,display_name,access_token_encrypted,token_expires_at,scopes,status,created_at,updated_at) VALUES('linkedin','campaign-test','Campaign Test',?,?,?,'connected',NOW(),NOW())",[encryptSecret('mock-access-token'),date('Y-m-d H:i:s',time()+3600),$account['scopes']]);$aid=(int)$pdo->lastInsertId();
+ campaignQuery("INSERT INTO social_accounts(provider_app_id,provider_id,external_account_id,display_name,access_token_encrypted,token_expires_at,scopes,status,created_at,updated_at) VALUES((SELECT MIN(id) FROM provider_apps WHERE provider_id='linkedin'),'linkedin','campaign-test','Campaign Test',?,?,?,'connected',NOW(),NOW())",[encryptSecret('mock-access-token'),date('Y-m-d H:i:s',time()+3600),$account['scopes']]);$aid=(int)$pdo->lastInsertId();
  campaignQuery("INSERT INTO text_blocks(block_key,title,content,created_at,updated_at) VALUES('campaign-test-snippet','Campaign Test','https://example.test/one',NOW(),NOW())");
  $manual=campaignStoreItem(['provider_id'=>'facebook','external_post_url'=>'https://example.test/post','post_excerpt'=>'<img src=x onerror=alert(1)>'],$uid);
  $again=campaignStoreItem(['provider_id'=>'facebook','external_post_url'=>'https://example.test/post'],$uid);checkCampaign($manual['id']===$again['id'],'dedupe manual input');checkCampaign($manual['external_post_urn']===null,'no inferred URN');

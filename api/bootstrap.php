@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 function envValue(string $key, ?string $fallback=null): ?string { $value=$_ENV[$key]??getenv($key); return $value===false||$value===null?$fallback:(string)$value; }
 require_once __DIR__.'/crypto.php'; require_once __DIR__.'/providers.php';
+require_once __DIR__.'/provider-apps.php';
 require_once __DIR__.'/linkedin-oauth.php';
 require_once __DIR__.'/linkedin-channels.php';
 require_once __DIR__.'/media.php';

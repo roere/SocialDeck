@@ -33,6 +33,7 @@ function campaignRoutes(string $path,string $method): void {
                 $item=campaignQuery('SELECT * FROM engagement_items WHERE id=? AND created_by=?',[$id,$uid])->fetch();if(!$item)throw new CampaignException('NOT_FOUND','Beitrag nicht gefunden.',404);
                 if($action==='read'){
                     $adapter=campaignProvider($item['provider_id']);$account=campaignAccount($item['social_account_id']?(int)$item['social_account_id']:null,$item['provider_id']);
+                    if($item['provider_id']==='linkedin')$account=providerCapabilityAccount('linkedin','postRead');
                     if(!$adapter||!$account)throw new CampaignException('READ_PERMISSION','Automatischer Abruf ist für dieses Konto nicht verfügbar.');
                     $post=$adapter->read($account,$item['external_post_urn']??$item['external_post_id']);
                     campaignQuery('UPDATE engagement_items SET post_excerpt=?,external_author_id=?,published_at=?,updated_at=CURRENT_TIMESTAMP WHERE id=?',[$post['post_excerpt'],$post['external_author_id'],$post['published_at'],$id]);
