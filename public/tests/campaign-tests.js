@@ -22,7 +22,7 @@ export const campaignTests=[
    const ui=createCampaignUI({root,csrf:()=>"csrf",notify:()=>{}});
    const tick=()=>new Promise(resolve=>setTimeout(resolve,0));
    try{
-     await ui.load();assert(root.textContent.includes("Relevante Beiträge"),"Feed fehlt");assert(root.textContent.includes("LinkedIn-Beiträge können derzeit nicht automatisch eingelesen werden"),"Scope-Hinweis fehlt");
+     await ui.load();assert(root.querySelector(".campaign-editor").hidden,"Editor initial offen");[...root.querySelectorAll("button")].find(b=>b.textContent==="Neue Kampagne").click();await tick();assert(root.textContent.includes("Relevante Beiträge"),"Feed fehlt");assert(root.textContent.includes("LinkedIn-Beiträge können derzeit nicht automatisch eingelesen werden"),"Scope-Hinweis fehlt");
      root.querySelector(".campaign-feed-card input").click();assert(root.textContent.includes("1 Beiträge ausgewählt"),"Auswahl");
      const base=root.querySelector('[aria-label="Basis-Antworttext"]');base.value="Hallo ";base.setSelectionRange(6,6);base.dispatchEvent(new Event("input"));base.focus();root.querySelector(".post-text-block").click();assert(base.value==="Hallo {{einladung}}","Baustein");
      const answer=root.querySelector(".campaign-reply textarea");answer.value="Individuell";answer.dispatchEvent(new Event("input"));base.value="Neue Basis";base.dispatchEvent(new Event("input"));assert(root.querySelector(".campaign-reply textarea").value==="Individuell","Custom überschrieben");

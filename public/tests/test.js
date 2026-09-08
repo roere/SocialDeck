@@ -1,3 +1,4 @@
+import {campaignEditorTests} from './campaign-editor-tests.js';
 import {providerAppsTests} from './provider-apps-tests.js';
 import {linkedinOAuthResultTests} from "./linkedin-oauth-result-tests.js";
 import {campaignLayoutTests} from "./campaign-layout-tests.js";
@@ -21,7 +22,7 @@ const registry = createProviderRegistry(); [linkedinProvider, instagramProvider,
 const tests = [
     ...campaignTests,
     ...linkedinOAuthResultTests,...providerAppsTests,
-    ...campaignLayoutTests,
+    ...campaignLayoutTests,...campaignEditorTests,
 	["LinkedIn registriert und gefunden", () => { if (registry.get("linkedin") !== linkedinProvider) throw new Error("Provider fehlt"); }],
 	["Unbekannter Provider wird nicht gefunden", () => { if (registry.get("unknown")) throw new Error("Provider unerwartet gefunden"); }],
 	["Drei Provider können aufgelistet werden", () => { if (registry.list().length !== 3) throw new Error("Falsche Anzahl"); }],

@@ -294,3 +294,5 @@ textarea:focus, input:focus, .campaign-filters select:focus, .campaign-manual se
 .linkedin-oauth-result a { color: var(--teal-dark); }
 
 .provider-app-card{overflow-wrap:anywhere;min-width:0}.provider-app-card .button-row{flex-wrap:wrap}.provider-config-form [data-app-form]{margin-top:1rem}
+
+.campaign-editor{display:grid;gap:20px;min-width:0}.campaign-editor[hidden]{display:none}.campaign-current{padding-top:12px;border-top:1px solid var(--line)}.campaign-current h2{overflow-wrap:anywhere}

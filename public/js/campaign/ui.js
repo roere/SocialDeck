@@ -9,14 +9,28 @@ const label=(text,input)=>{const n=el("label",text);n.append(input);return n;};
 const date=value=>value?new Date(value.replace(" ","T")+(/Z$/.test(value)?"":"Z")).toLocaleString("de-DE"):"Datum nicht verfügbar";
 const link=url=>{const a=el("a","Originalbeitrag öffnen");try{const u=new URL(url);if(u.protocol!=="https:")return el("span","Kein Original-Link verfügbar");a.href=u.href;}catch{return el("span","Kein Original-Link verfügbar");}a.target="_blank";a.rel="noopener noreferrer";return a;};
 export function createCampaignUI({root,csrf,notify}) {
-  const client=createCampaignApi(csrf);let campaign=newCampaign(),items=[],campaigns=[],accounts=[],providers=[],blocks=[],config={warning:5,strong:10},dirty=false,loaded=false,busy=false,activeTextarea=null;
+  const client=createCampaignApi(csrf);let campaign=null,campaignEditorMode=null,items=[],campaigns=[],accounts=[],providers=[],blocks=[],config={warning:5,strong:10},dirty=false,loaded=false,busy=false,activeTextarea=null;
   let platformFilter="",statusFilter="",keyword="",relevance="";
   const shell=el("fieldset",undefined,"post-editor campaign-shell"),error=el("p",undefined,"form-error"),summary=el("section",undefined,"panel editor-panel"),feed=el("section",undefined,"panel editor-panel"),selection=el("section",undefined,"campaign-selection"),basePanel=el("section",undefined,"panel editor-panel"),targets=el("section",undefined,"campaign-targets"),footer=el("section",undefined,"panel publish-bar");
-  error.setAttribute("role","alert");root.append(error,shell);shell.append(summary,feed,basePanel,targets,footer);
+  error.setAttribute("role","alert");root.append(error,shell);const editor=el("div",undefined,"campaign-editor"),current=el("section",undefined,"campaign-current");editor.hidden=true;shell.append(summary,editor);editor.append(current,feed,basePanel,targets,footer);
   const dialog=el("dialog",undefined,"platform-variant-dialog campaign-overlay"),dialogTitle=el("h2","Kampagnenantwort"),dialogContent=el("div",undefined,"platform-variant-dialog-content"),dialogShell=el("div",undefined,"platform-variant-dialog-shell"),dialogHeader=el("header",undefined,"platform-variant-dialog-header");dialog.setAttribute("aria-label","Kampagnenantwort vergrößert");root.append(dialog);dialog.append(dialogShell);dialogShell.append(dialogHeader,dialogContent);dialogHeader.append(dialogTitle);
   const overlay=createVariantOverlayController({dialog,content:dialogContent,title:dialogTitle});
   const reviewDialog=el("dialog",undefined,"publish-confirmation campaign-review"),reviewBody=el("div");reviewDialog.setAttribute("aria-label","Abschlussübersicht und Freigabe");reviewDialog.append(reviewBody);root.append(reviewDialog);
   const manualDialog=el("dialog",undefined,"publish-confirmation campaign-manual");manualDialog.setAttribute("aria-label","Beitrag hinzufügen");root.append(manualDialog);
+  const discardDialog=el("dialog",undefined,"publish-confirmation campaign-discard");discardDialog.setAttribute("aria-label","Ungespeicherte Änderungen verwerfen?");root.append(discardDialog);
+  let discardPending=null,settleDiscard=null;
+  function confirmDiscard(){
+    if(!dirty)return Promise.resolve(true);
+    if(discardPending)return discardPending;
+    discardPending=new Promise(resolve=>settleDiscard=resolve);
+    const finish=value=>{discardDialog.close();const resolve=settleDiscard;discardPending=settleDiscard=null;resolve?.(value);};
+    const keep=el("button","Weiter bearbeiten","button button-secondary"),discard=el("button","Änderungen verwerfen","button button-primary");keep.type=discard.type="button";
+    keep.addEventListener("click",()=>finish(false));discard.addEventListener("click",()=>finish(true));
+    discardDialog.oncancel=e=>{e.preventDefault();finish(false);};
+    const actions=el("div",undefined,"button-row");actions.append(keep,discard);discardDialog.replaceChildren(el("h2","Ungespeicherte Änderungen verwerfen?"),el("p","Die Änderungen an dieser Kampagne wurden noch nicht gespeichert."),actions);discardDialog.showModal();keep.focus();return discardPending;
+  }
+  function closeEditor(){overlay.close(false);for(const d of [reviewDialog,manualDialog])if(d.open)d.close();campaign=null;campaignEditorMode=null;dirty=false;activeTextarea=null;platformFilter=statusFilter=keyword=relevance="";render();}
+  async function cancel(){if(await confirmDiscard())closeEditor();}
   const run=async action=>{if(busy)return;busy=true;shell.disabled=true;error.textContent="";try{await action();}catch(e){error.textContent=e.message;const openDialog=root.querySelector("dialog[open]");if(openDialog){let message=openDialog.querySelector(".campaign-dialog-error");if(!message){message=el("p",undefined,"form-error campaign-dialog-error");message.setAttribute("role","alert");openDialog.prepend(message);}message.textContent=e.message;}notify(e.message,"error");}finally{busy=false;shell.disabled=false;}};
   const button=(text,fn,kind="secondary")=>{const b=el("button",text,`button button-${kind}`);b.type="button";b.addEventListener("click",()=>run(fn));return b;};
   const dialogActions=el("div",undefined,"button-row");
@@ -24,17 +38,17 @@ export function createCampaignUI({root,csrf,notify}) {
   const heading=(text,...actions)=>{const h=el("div",undefined,"panel-heading compact");h.append(el("h2",text));if(actions.length){const row=el("div",undefined,"button-row");row.append(...actions);h.append(row);}return h;};
   function groupActions(container){const buttons=[...container.children].filter(n=>n.matches("button"));if(buttons.length){const row=el("div",undefined,"button-row");row.append(...buttons);container.append(row);}}
   const badge=text=>el("span",text,"status-badge");
-  function change(){dirty=true;renderSelection();renderFooter();}
+  function change(){dirty=true;renderCurrent();renderSelection();renderFooter();}
   function checkbox(text,checked,onChange,disabled=false){const input=el("input");input.type="checkbox";input.checked=checked;input.disabled=disabled;input.addEventListener("change",()=>onChange(input.checked));const l=label(text,input);l.className="email-enabled";l.prepend(input);return l;}
   function original(item){const box=el("section",undefined,"campaign-original");box.append(el("strong",`${providers.find(p=>p.id===item.provider_id)?.name||item.provider_id} · ${item.author_display_name||"Unbekannter Autor"}`),el("p",date(Object.hasOwn(item,"post_published_at")?item.post_published_at:item.published_at),"field-hint"),el("p",item.post_excerpt||"Kein Beitragsauszug vorhanden.","campaign-excerpt"),link(item.external_post_url));return box;}
   function select(options,value,onChange){const s=el("select");for(const [id,name] of options){const o=el("option",name);o.value=id;s.append(o);}s.value=value;s.addEventListener("change",()=>onChange(s.value));return s;}
   async function reloadList(){const result=await client.list();campaigns=result.campaigns;accounts=result.accounts;config=result.warnings;providers=result.providers;}
-  async function save(){const result=await client.save(campaign);campaign=result.campaign;dirty=false;await reloadList();render();notify("Kampagne gespeichert.");}
+  async function save(close=false){const result=await client.save(campaign);campaign=result.campaign;campaignEditorMode="edit";dirty=false;await reloadList();if(close)closeEditor();else render();notify("Kampagne gespeichert.");}
   function renderSummary(){
     summary.replaceChildren(heading("Kampagnenübersicht"));
-    summary.querySelector(".panel-heading").append(button("Neue Kampagne",()=>{if(dirty&&!confirm("Ungespeicherte Änderungen verwerfen?"))return;campaign=newCampaign();dirty=false;render();}));
+    summary.querySelector(".panel-heading").append(button("Neue Kampagne",async()=>{if(!await confirmDiscard())return;campaign=newCampaign();campaignEditorMode="create";dirty=false;platformFilter=statusFilter=keyword=relevance="";render();}));
     for(const c of campaigns){const active=activeTargets(c),published=c.targets.filter(t=>t.status==="published").length,failed=c.targets.filter(t=>t.status==="failed").length;
-      const row=el("article",undefined,"history-item"),meta=el("div");meta.append(el("strong",c.name),el("p",`${date(c.created_at)} · ${c.targets.length} Ziele · ${active.length} aktiv · ${published} veröffentlicht · ${failed} fehlgeschlagen · ${c.targets.length-active.length} deaktiviert`));row.append(meta,badge(labels[c.status]),button("Kampagne laden",async()=>{if(dirty&&!confirm("Ungespeicherte Änderungen verwerfen?"))return;campaign=(await client.load(c.id)).campaign;dirty=false;render();}));summary.append(row);
+      const row=el("article",undefined,"history-item"),meta=el("div");meta.append(el("strong",c.name),el("p",`${date(c.created_at)} · ${c.targets.length} Ziele · ${active.length} aktiv · ${published} veröffentlicht · ${failed} fehlgeschlagen · ${c.targets.length-active.length} deaktiviert`));row.append(meta,badge(labels[c.status]),button("Kampagne laden",async()=>{if(!await confirmDiscard())return;const result=await client.load(c.id);campaign=result.campaign;campaignEditorMode="edit";dirty=false;platformFilter=statusFilter=keyword=relevance="";render();}));summary.append(row);
     }
   }
   function renderFeed(){
@@ -90,9 +104,9 @@ export function createCampaignUI({root,csrf,notify}) {
       const head=el("div",undefined,"panel-heading compact"),identity=el("div"),actions=el("div",undefined,"variant-head-actions");identity.append(el("p",providers.find(p=>p.id===t.provider_id)?.name||t.provider_id,"section-kicker"),el("h3",t.author_display_name||"Unbekannter Autor"));const toggle=controls.querySelector("label");actions.append(badge(labels[t.status]),expand);head.append(toggle,identity,actions);const statusLine=controls.querySelector("p");statusLine.className="field-hint";groupActions(controls);card.append(head,original(t),controls);targets.append(card);
     }
   }
-  function renderFooter(){footer.replaceChildren(heading("Veröffentlichung"),badge(labels[campaign.status]),el("p",dirty?"Ungespeicherte Änderungen":campaign.id?"Kampagne gespeichert":"Noch nicht gespeichert","field-hint"),button("Kampagne speichern",save),button("Abschlussübersicht prüfen",()=>review(),"primary"));
-    if(campaign.id)footer.append(button("Kampagne löschen",async()=>{if(!confirm("Kampagne mit gespeicherten Antworten löschen? Bereits veröffentlichte Kommentare bleiben im Netzwerk bestehen."))return;await client.remove(campaign.id);campaign=newCampaign();dirty=false;await reloadList();render();},"quiet"));
-    groupActions(footer);const row=footer.querySelector(".button-row:last-child"),primary=row.querySelector(".button-primary");if(primary)row.append(primary);
+  function renderFooter(){footer.replaceChildren(heading("Veröffentlichung"),badge(labels[campaign.status]),el("p",dirty?"Ungespeicherte Änderungen":campaign.id?"Kampagne gespeichert":"Noch nicht gespeichert","field-hint"),button("Kampagne speichern",()=>save(true),"primary"),button("Abbrechen",cancel),button("Abschlussübersicht prüfen",()=>review()));
+    if(campaign.id)footer.append(button("Kampagne löschen",async()=>{if(!confirm("Kampagne mit gespeicherten Antworten löschen? Bereits veröffentlichte Kommentare bleiben im Netzwerk bestehen."))return;await client.remove(campaign.id);await reloadList();closeEditor();},"quiet"));
+    groupActions(footer);
   }
   async function review(retryItem){
     if(dirty||!campaign.id)await save();const retry=retryItem?campaign.targets.find(t=>t.engagement_item_id===retryItem)?.id:null;
@@ -113,6 +127,10 @@ export function createCampaignUI({root,csrf,notify}) {
     const advanced=el("details");advanced.append(el("summary","Externe Post-URN (optional)"),label("Nur eine vom Provider gelieferte URN",urn),el("p","Keine URN aus einer URL ableiten. Ohne gültige externe ID bleibt die Veröffentlichung manuell."));form.append(advanced,el("p","Die URL wird gespeichert, nicht ausgelesen. Kein Scraping."));const submit=el("button","Beitrag hinzufügen","button button-primary");submit.type="submit";form.append(submit,button("Abbrechen",()=>manualDialog.close()));
     form.addEventListener("submit",event=>{event.preventDefault();run(async()=>{submit.disabled=true;try{await client.addItem({provider_id:provider.value,social_account_id:account.value?Number(account.value):null,external_post_url:url.value,author_display_name:author.value,post_excerpt:excerpt.value,external_post_urn:urn.value});items=(await client.items()).items;manualDialog.close();renderFeed();}finally{submit.disabled=false;}});});groupActions(form);manualDialog.append(form);manualDialog.showModal();
   }
-  function render(){renderSummary();renderFeed();renderSelection();renderBase();renderTargets();renderFooter();}
-  return {async load(){if(loaded)return;await run(async()=>{await reloadList();const [feedData,textData]=await Promise.all([client.items(),api.getActiveTextBlocks()]);items=feedData.items;blocks=textData.textBlocks;loaded=true;render();});},reset(){overlay.close(false);for(const d of [reviewDialog,manualDialog])if(d.open)d.close();campaign=newCampaign();items=campaigns=accounts=blocks=[];loaded=false;dirty=false;shell.replaceChildren(summary,feed,basePanel,targets,footer);for(const n of [summary,feed,selection,basePanel,targets,footer])n.replaceChildren();},refreshBlocks(value){blocks=value;if(loaded)renderBase();}};
+  function renderCurrent(){current.replaceChildren(el("p","Aktuelle Kampagne","section-kicker"),el("h2",campaign?.name||"Neue Kampagne"));}
+  function render(){renderSummary();editor.hidden=campaignEditorMode===null;if(!campaignEditorMode){overlay.close(false);for(const n of [current,feed,selection,basePanel,targets,footer])n.replaceChildren();return;}renderCurrent();renderFeed();renderSelection();renderBase();renderTargets();renderFooter();}
+  return {async load(){if(loaded)return;await run(async()=>{await reloadList();const [feedData,textData]=await Promise.all([client.items(),api.getActiveTextBlocks()]);items=feedData.items;blocks=textData.textBlocks;loaded=true;render();});},
+    async beforeLeave(){if(busy)return false;if(!await confirmDiscard())return false;closeEditor();return true;},
+    reset(){overlay.close(false);for(const d of [reviewDialog,manualDialog,discardDialog])if(d.open)d.close();settleDiscard?.(false);discardPending=settleDiscard=null;campaign=null;campaignEditorMode=null;items=campaigns=accounts=blocks=[];loaded=false;dirty=false;editor.hidden=true;for(const n of [summary,current,feed,selection,basePanel,targets,footer])n.replaceChildren();},
+    refreshBlocks(value){blocks=value;if(loaded&&campaignEditorMode)renderBase();}};
 }

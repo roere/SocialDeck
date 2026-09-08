@@ -6,7 +6,7 @@ async function fixture(width,check){
 export const campaignLayoutTests=[
  ['Kampagne Desktop: gemeinsame Breite, Typografie, Filter und Listen',()=>fixture(1280,async(d,w)=>{
    const main=d.querySelector('.app-shell'),root=d.querySelector('#campaign-root');assert(main.clientWidth===1160&&root.clientWidth===main.clientWidth,'Abweichende Hauptbreite');
-   assert([...d.querySelectorAll('.campaign-shell h2')].map(n=>n.textContent).join('|')==='Kampagnenübersicht|Relevante Beiträge|Kampagnenantwort|Konkrete Antworten|Veröffentlichung','Überschriften');
+   assert([...d.querySelectorAll('.campaign-shell h2')].map(n=>n.textContent).join('|')==='Kampagnenübersicht|Austausch September|Relevante Beiträge|Kampagnenantwort|Konkrete Antworten|Veröffentlichung','Überschriften');
    const controls=[...d.querySelectorAll('.campaign-filters select,.campaign-filters input')];assert(new Set(controls.map(n=>Math.round(n.getBoundingClientRect().top))).size===1,'Filter nicht in einer Zeile');
    assert(controls.every(n=>w.getComputedStyle(n).borderRadius==='5px'),'Formelemente');
    const rows=[...d.querySelectorAll('.campaign-feed-card')];assert(rows.every(n=>n.classList.contains('post-list-item'))&&rows[1].offsetTop>rows[0].offsetTop,'Keine kompakte Liste');assert(rows[0].clientHeight<260,'Treffer zu hoch');
